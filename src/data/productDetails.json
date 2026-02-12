@@ -1,0 +1,388 @@
+{
+    "o-rings": {
+        "title": "O-Rings & Quad Rings",
+        "description": "O-Rings are mostly used as static seals in-between flanges or joint sealing. We stock standard JIS and AS sizes.",
+        "image": "/img/product-category-3.png",
+        "specs": [
+            {
+                "partNo": "OR13000100-64",
+                "id": "1.00",
+                "od": "3.60",
+                "thk": "1.30",
+                "material": "FKM",
+                "mouldNo": "SIA-2374"
+            },
+            {
+                "partNo": "OR16000100-32",
+                "id": "1.00",
+                "od": "4.20",
+                "thk": "1.60",
+                "material": "EPDM",
+                "mouldNo": "SIA-2807"
+            },
+            {
+                "partNo": "OR17800178-01",
+                "id": "1.78",
+                "od": "5.34",
+                "thk": "1.78",
+                "material": "VITON",
+                "mouldNo": "SIA-1102"
+            },
+            {
+                "partNo": "OR-JIS-G25",
+                "id": "24.40",
+                "od": "30.60",
+                "thk": "3.10",
+                "material": "NBR/FKM",
+                "mouldNo": "JIS-G25"
+            },
+            {
+                "partNo": "OR-JIS-G30",
+                "id": "29.40",
+                "od": "35.60",
+                "thk": "3.10",
+                "material": "NBR/FKM",
+                "mouldNo": "JIS-G30"
+            },
+            {
+                "partNo": "OR-JIS-G35",
+                "id": "34.40",
+                "od": "40.60",
+                "thk": "3.10",
+                "material": "NBR/FKM",
+                "mouldNo": "JIS-G35"
+            },
+            {
+                "partNo": "OR-JIS-G40",
+                "id": "39.40",
+                "od": "45.60",
+                "thk": "3.10",
+                "material": "NBR/FKM",
+                "mouldNo": "JIS-G40"
+            },
+            {
+                "partNo": "OR-JIS-G45",
+                "id": "44.40",
+                "od": "50.60",
+                "thk": "3.10",
+                "material": "NBR/FKM",
+                "mouldNo": "JIS-G45"
+            },
+            {
+                "partNo": "OR-AS-001",
+                "id": "0.74",
+                "od": "2.78",
+                "thk": "1.02",
+                "material": "Standard",
+                "mouldNo": "AS-001"
+            },
+            {
+                "partNo": "OR-AS-002",
+                "id": "1.07",
+                "od": "3.61",
+                "thk": "1.27",
+                "material": "Standard",
+                "mouldNo": "AS-002"
+            },
+            {
+                "partNo": "OR-AS-003",
+                "id": "1.42",
+                "od": "4.46",
+                "thk": "1.52",
+                "material": "Standard",
+                "mouldNo": "AS-003"
+            },
+            {
+                "partNo": "OR-AS-010",
+                "id": "6.07",
+                "od": "9.63",
+                "thk": "1.78",
+                "material": "Standard",
+                "mouldNo": "AS-010"
+            }
+        ]
+    },
+    "oil-seals": {
+        "title": "Oil Seals",
+        "description": "High-quality rotary shaft oil seals for effective sealing of lubricants.",
+        "image": "/img/product-category-1.png",
+        "specs": [
+            {
+                "partNo": "OS-25x40x7-NBR",
+                "id": "25.0",
+                "od": "40.0",
+                "thk": "7.0",
+                "material": "NBR",
+                "mouldNo": "M-101"
+            },
+            {
+                "partNo": "OS-30x50x8-FKM",
+                "id": "30.0",
+                "od": "50.0",
+                "thk": "8.0",
+                "material": "FKM",
+                "mouldNo": "M-102"
+            }
+        ]
+    },
+    "hydraulic-seals": {
+        "title": "Hydraulic Seals",
+        "description": "Engineered for high-pressure hydraulic cylinders and systems.",
+        "image": "/img/product-category-4.png",
+        "specs": [
+            {
+                "partNo": "HS-U-CUP-50",
+                "id": "50.0",
+                "od": "60.0",
+                "thk": "10.0",
+                "material": "PU",
+                "mouldNo": "H-201"
+            },
+            {
+                "partNo": "HS-WIPER-40",
+                "id": "40.0",
+                "od": "48.0",
+                "thk": "5/7",
+                "material": "NBR",
+                "mouldNo": "H-202"
+            }
+        ]
+    },
+    "seals": {
+        "title": "Industrial Seals",
+        "description": "Comprehensive range of sealing solutions for various industrial applications.",
+        "image": "/img/product-category-2.png",
+        "specs": [
+            {
+                "partNo": "GEN-SEAL-01",
+                "id": "-",
+                "od": "-",
+                "thk": "-",
+                "material": "NBR",
+                "mouldNo": "-"
+            }
+        ]
+    },
+    "wheel-stoppers": {
+        "title": "Wheel Stoppers",
+        "description": "Heavy-duty rubber wheel stoppers designed for parking safety and vehicle positioning.",
+        "image": "/img/bps-wheel-stopper.png",
+        "specs": [
+            {
+                "partNo": "DH-PB-5-90CM",
+                "desc": "Rubber Wheel Stopper - 90cm",
+                "size": "900x150x100mm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "316"
+            },
+            {
+                "partNo": "PB-4-550MM",
+                "desc": "Wheel Stopper Heavy Duty",
+                "size": "550mm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "395"
+            },
+            {
+                "partNo": "DH-PB-2",
+                "desc": "Rubber Wheel Stopper - 2mtr",
+                "size": "2000x150x100mm",
+                "weight": "16kg",
+                "material": "Rubber",
+                "pcs": "6"
+            },
+            {
+                "partNo": "DH-PB-2-RAISE",
+                "desc": "6 Foot Wheel Stopper (Raised)",
+                "size": "1830x150x100mm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "0"
+            },
+            {
+                "partNo": "DH-PB-4",
+                "desc": "Home Wheel Stopper",
+                "size": "Standard",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "-"
+            }
+        ]
+    },
+    "speed-humps": {
+        "title": "Speed Humps",
+        "description": "Durable rubber speed humps for traffic calming and safety.",
+        "image": "/img/bps-speed-hump.png",
+        "specs": [
+            {
+                "partNo": "SP-H-50",
+                "desc": "Standard Speed Hump",
+                "size": "500x350x50mm",
+                "weight": "12kg",
+                "material": "Rubber"
+            }
+        ]
+    },
+    "corner-guards": {
+        "title": "Corner Guards",
+        "description": "Protective rubber guards for columns and wall corners.",
+        "image": "/img/bps-corner-guard.png",
+        "specs": [
+            {
+                "partNo": "DH-129 (L)",
+                "desc": "Corner Guard 1000mm",
+                "size": "1000x100x10mm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "334"
+            },
+            {
+                "partNo": "DH-128",
+                "desc": "Corner Guard 800mm",
+                "size": "800x100x10mm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "123"
+            },
+            {
+                "partNo": "CG-STD",
+                "desc": "Standard Corner Guard",
+                "size": "800mm",
+                "weight": "2.5kg",
+                "material": "Rubber",
+                "pcs": "50"
+            }
+        ]
+    },
+    "wall-guards": {
+        "title": "Wall Guards",
+        "description": "Impact protection for industrial and parking walls.",
+        "image": "/img/bps-wall-guard.png",
+        "specs": [
+            {
+                "partNo": "WP-4",
+                "desc": "Wall Protector",
+                "size": "Standard",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "6"
+            },
+            {
+                "partNo": "WG-200x25",
+                "desc": "Wall Protector (With Two Yellow Strip)",
+                "size": "200mmx25mm x 3m",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "25"
+            },
+            {
+                "partNo": "WG-200x30",
+                "desc": "Wall Protector (With Yellow Strip)",
+                "size": "200mmx30mm x 3m",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "66"
+            },
+            {
+                "partNo": "WG-COL-80",
+                "desc": "Wall Protector (Column Guard)",
+                "size": "80cm",
+                "weight": "-",
+                "material": "Rubber",
+                "pcs": "120"
+            }
+        ]
+    },
+    "bps": {
+        "title": "BPS Safety Products",
+        "description": "Building protection systems and traffic safety equipment.",
+        "image": "/img/bps-wheel-stopper.png",
+        "specs": [
+            {
+                "partNo": "BPS-GEN-01",
+                "desc": "General BPS Item",
+                "size": "-",
+                "weight": "-",
+                "material": "Rubber"
+            }
+        ]
+    },
+    "rubber-sheets": {
+        "title": "Rubber Sheets",
+        "description": "Industrial grade rubber sheets for gasketing and flooring.",
+        "image": "/img/product-rubber-sheets.png",
+        "specs": [
+            {
+                "partNo": "RS-NBR-2MM",
+                "desc": "NBR Rubber Sheet",
+                "size": "1.2m x 10m",
+                "thk": "2mm",
+                "material": "NBR"
+            },
+            {
+                "partNo": "RS-NEO-3MM",
+                "desc": "Neoprene Rubber Sheet",
+                "size": "1.2m x 10m",
+                "thk": "3mm",
+                "material": "Neoprene"
+            }
+        ]
+    },
+    "mats": {
+        "title": "Rubber Mats",
+        "description": "Anti-slip and anti-fatigue mats for industrial use.",
+        "image": "/img/product-rubber-mats.png",
+        "specs": [
+            {
+                "partNo": "MAT-AF-90x150",
+                "desc": "Anti-Fatigue Mat",
+                "size": "900x1500mm",
+                "thk": "15mm",
+                "material": "NR/SBR"
+            },
+            {
+                "partNo": "MAT-ELEC-1x10",
+                "desc": "Electrical Insulation Mat",
+                "size": "1m x 10m",
+                "thk": "3mm",
+                "material": "EPDM"
+            }
+        ]
+    },
+    "custom-rubber": {
+        "title": "Custom Rubber Parts",
+        "description": "Bespoke molded rubber components to your specifications.",
+        "image": "/img/product-custom-rubber.png",
+        "specs": [
+            {
+                "partNo": "CUST-GASKET-01",
+                "desc": "Custom Flange Gasket per Drawing",
+                "size": "Custom",
+                "thk": "3mm",
+                "material": "Silicone"
+            },
+            {
+                "partNo": "CUST-MOUNT-05",
+                "desc": "Vibration Mount",
+                "size": "50x50mm",
+                "thk": "25mm",
+                "material": "NR 60 Shore A"
+            }
+        ]
+    },
+    "rubber": {
+        "title": "Rubber Products",
+        "description": "Wide range of rubber sheets, mats, and molded products.",
+        "image": "/img/product-custom-rubber.png",
+        "specs": [
+            {
+                "partNo": "GEN-RUB-SHEET",
+                "desc": "Commercial Rubber Sheet",
+                "size": "1.2m x 10m",
+                "thk": "Multiple",
+                "material": "SBR"
+            }
+        ]
+    }
+}

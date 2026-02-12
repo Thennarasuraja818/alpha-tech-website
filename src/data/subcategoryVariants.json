@@ -1,0 +1,123 @@
+{
+    "o-rings": [
+        {
+            "id": "nitrile",
+            "name": "Nitrile O-Rings",
+            "desc": "Standard NBR o-rings for general purpose sealing.",
+            "image": "/img/oring-nitrile.png"
+        },
+        {
+            "id": "viton",
+            "name": "Viton® O-Rings",
+            "desc": "High temperature and chemical resistance (FKM).",
+            "image": "/img/oring-viton.png"
+        },
+        {
+            "id": "epdm",
+            "name": "EPDM O-Rings",
+            "desc": "Excellent weathering and ozone resistance.",
+            "image": "/img/oring-epdm.png"
+        },
+        {
+            "id": "silicone",
+            "name": "Silicone O-Rings",
+            "desc": "Wide temperature range and flexibility.",
+            "image": "/img/oring-silicone.png"
+        },
+        {
+            "id": "ptfe",
+            "name": "PTFE O-Rings",
+            "desc": "Chemical inertness and low friction.",
+            "image": "/img/oring-ptfe.png"
+        },
+        {
+            "id": "neoprene",
+            "name": "Neoprene O-Rings",
+            "desc": "Good resistance to oils and weathering.",
+            "image": "/img/oring-neoprene.png"
+        },
+        {
+            "id": "encapsulated",
+            "name": "Encapsulated O-Rings",
+            "desc": "FEP/PFA encapsulation for chemical resistance.",
+            "image": "/img/oring-encapsulated.png"
+        },
+        {
+            "id": "ptfe-backup",
+            "name": "PTFE Backup O-Rings",
+            "desc": "Prevents extrusion in high pressure applications.",
+            "image": "/img/oring-ptfe-backup.png"
+        },
+        {
+            "id": "kalrez",
+            "name": "Kalrez® O-Rings",
+            "desc": "Extreme chemical and thermal resistance perfluoroelastomer.",
+            "image": "/img/oring-kalrez.png"
+        },
+        {
+            "id": "hnbr",
+            "name": "HNBR O-Rings",
+            "desc": "Hydrogenated Nitrile for improved heat and oil resistance.",
+            "image": "/img/oring-hnbr.png"
+        },
+        {
+            "id": "aflas",
+            "name": "Aflas® O-Rings",
+            "desc": "Resistance to oil, acid, and steam.",
+            "image": "/img/oring-aflas.png"
+        },
+        {
+            "id": "encapsulated-gaskets",
+            "name": "Encapsulated Gaskets",
+            "desc": "Gaskets with protective chemical casing.",
+            "image": "/img/oring-encapsulated-gaskets.png"
+        },
+        {
+            "id": "bonded-seals",
+            "name": "Bonded Seals",
+            "desc": "Washer with integral rubber seal.",
+            "image": "/img/oring-bonded-seals.png"
+        },
+        {
+            "id": "oring-grease",
+            "name": "O-ring Grease",
+            "desc": "Lubricants for installation and maintenance.",
+            "image": "/img/oring-grease.png"
+        },
+        {
+            "id": "oring-kits",
+            "name": "O-ring Kits",
+            "desc": "Assorted o-rings in convenient storage boxes.",
+            "image": "/img/oring-kits.png"
+        }
+    ],
+    "oil-seals": [
+        {
+            "id": "standard-oil-seals",
+            "name": "Standard Oil Seals",
+            "desc": "General purpose rotary shaft seals."
+        },
+        {
+            "id": "high-pressure-oil-seals",
+            "name": "High Pressure Oil Seals",
+            "desc": "Reinforced for pressure applications."
+        }
+    ],
+    "hydraulic-seals": [
+        {
+            "id": "rod-seals",
+            "name": "Rod Seals",
+            "desc": "Seals for hydraulic cylinder rods."
+        },
+        {
+            "id": "piston-seals",
+            "name": "Piston Seals",
+            "desc": "Seals for hydraulic cylinder pistons."
+        },
+        {
+            "id": "wipers",
+            "name": "Wipers / Scrapers",
+            "desc": "Prevent contaminants from entering the system."
+        }
+    ]
+}

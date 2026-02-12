@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ilap.me/</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/login</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/register</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/contact</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/corporate</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/about</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/facilitator</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/facilitator-detail/sample-slug</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/team</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/training/sample-id</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/training-detail/sample-courseId</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/team-details/sample-slug</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/podcast</loc>
+  </url>
+  <url>
+    <loc>https://ilap.me/calendar</loc>
+  </url>
+
+
+</urlset>

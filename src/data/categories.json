@@ -1,0 +1,62 @@
+[
+    {
+        "id": "seals",
+        "title": "Seals",
+        "description": "High-performance O-rings, oil seals, and hydraulic solutions.",
+        "icon": "bi-gear-wide-connected",
+        "subcategories": [
+            {
+                "id": "o-rings",
+                "name": "O-Rings"
+            },
+            {
+                "id": "oil-seals",
+                "name": "Oil Seals"
+            },
+            {
+                "id": "hydraulic-seals",
+                "name": "Hydraulic Seals"
+            }
+        ]
+    },
+    {
+        "id": "bps",
+        "title": "BPS Products",
+        "description": "Safety solutions including wheel stoppers, speed humps, and guards.",
+        "icon": "bi-shield-check",
+        "subcategories": [
+            {
+                "id": "corner-guards",
+                "name": "Corner Guards"
+            },
+            {
+                "id": "wheel-stoppers",
+                "name": "Wheel Stoppers"
+            },
+            {
+                "id": "speed-humps",
+                "name": "Speed Humps"
+            },
+            {
+                "id": "wall-guards",
+                "name": "Wall Guards"
+            }
+        ]
+    },
+    {
+        "id": "rubber",
+        "title": "Rubber Sheets",
+        "description": "Industrial rubber sheets, mats, and custom molded parts.",
+        "icon": "bi-layers-half",
+        "subcategories": [
+            {
+                "id": "mats",
+                "name": "Mats"
+            },
+            {
+                "id": "custom-rubber",
+                "name": "Custom Rubber"
+            }
+        ]
+    }
+]

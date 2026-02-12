@@ -1,0 +1,29 @@
+/* ===== CATEGORY HORIZONTAL SCROLL ===== */
+
+.category-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 16px;
+}
+
+.category-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 24px;
+  width: max-content; /* 🔥 THIS enables overflow */
+}
+
+.category-item {
+  flex: 0 0 360px; /* fixed card width */
+  max-width: 360px;
+}
+
+/* Hide scrollbar (optional) */
+.category-scroll-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.category-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+}

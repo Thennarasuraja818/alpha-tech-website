@@ -1,0 +1,42 @@
+/* src/styles/rtl.css */
+.rtl-layout {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Specific RTL overrides */
+.rtl-layout .navbar-nav {
+  padding-right: 0;
+}
+
+.rtl-layout .dropdown-menu {
+  text-align: right;
+}
+
+.rtl-layout .float-right {
+  float: left !important;
+}
+
+.rtl-layout .float-left {
+  float: right !important;
+}
+
+.rtl-layout .text-right {
+  text-align: left !important;
+}
+
+.rtl-layout .text-left {
+  text-align: right !important;
+}
+
+.rtl-layout .ml-auto {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+
+.rtl-layout .mr-auto {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+/* Add more RTL-specific styles as needed */
