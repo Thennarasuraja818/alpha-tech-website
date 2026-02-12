@@ -7,7 +7,7 @@ import subcategoryVariants from "../../data/subcategoryVariants.json";
 import { toast } from "react-toastify";
 import { useTranslation } from "../../context/TranslationContext";
 import HomeApi from "../../apiProvider/homeApi";
-import { BASE_URL } from "../../network/apiClient";
+import { BASE_URL,IMAGE_URL } from "../../network/apiClient";
 
 const ProductSpecs = () => {
     const { subCategoryId, variantId: childCategoryId } = useParams();
@@ -79,7 +79,7 @@ const ProductSpecs = () => {
                         name: hero.productName,
                         desc: hero.description || hero.shortDescription,
                         image: hero.productImage?.[0]
-                            ? `${BASE_URL}/${hero.productImage[0].docPath}/${hero.productImage[0].docName}`
+                            ? `${IMAGE_URL}/${hero.productImage[0].docPath}/${hero.productImage[0].docName}`
                             : "/img/product-seal-1.png"
                     });
                 }
@@ -150,7 +150,7 @@ const ProductSpecs = () => {
 
     return (
         <div className="product-specs-page pb-5" style={{ marginTop: '100px', backgroundColor: '#f8f9fa', minHeight: '80vh' }}>
-            <div className="container">
+            <div className="container" style={{paddingTop:"20px"}}>
 
                 {/* Modern Product Intro Section (Dark Theme Hero) */}
                 <div className="card border-0 shadow-lg mb-5 overflow-hidden rounded-4">
@@ -162,7 +162,7 @@ const ProductSpecs = () => {
                             <img
                                 src={
                                     heroProduct?.productImage?.[0]
-                                        ? `${BASE_URL}/${heroProduct.productImage[0].docPath}/${heroProduct.productImage[0].docName}`
+                                        ? `${IMAGE_URL}/${heroProduct.productImage[0].docPath}/${heroProduct.productImage[0].docName}`
                                         : "/img/product-seal-1.png"
                                 }
                                 alt={heroProduct?.productName}
