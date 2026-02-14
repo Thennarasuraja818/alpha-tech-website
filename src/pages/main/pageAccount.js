@@ -14,7 +14,7 @@ const PageAccount = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const user = useSelector((state) => state.auth.user);
     const token = useSelector((state) => state.auth.token);
-    const userName = user.name || 'Thennarasu Raja';
+    const userName = user?.name || 'Thennarasu Raja';
     console.error("userDetails", user)
     console.error("token", token)
 

@@ -44,7 +44,12 @@ const LoginPage = () => {
 
     const formSubmit = async (data) => {
         try {
-            const input = { email: data.email, password: data.password };
+            const guestUserId = localStorage.getItem('guestUserId');
+            const input = {
+                email: data.email,
+                password: data.password,
+                guestUserId: guestUserId || undefined
+            };
             const result = await apiProvider.login(input);
             console.error("resulT:", result?.response);
 
@@ -52,6 +57,13 @@ const LoginPage = () => {
                 localStorage.setItem('userToken', result.response.token);
                 const { user, token } = result.response.data;
                 disPatch(login({ token: token, user: user }));
+
+                // Store user object for easy retrieval in other components
+                localStorage.setItem('user', JSON.stringify(user));
+
+                // Clear guest user ID as it is now merged
+                localStorage.removeItem('guestUserId');
+
                 toast.success("Login Successful!", { autoClose: 1500 });
                 setTimeout(() => {
                     navigate("/");

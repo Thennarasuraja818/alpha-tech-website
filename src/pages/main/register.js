@@ -43,6 +43,7 @@ const RegisterPage = () => {
 
     const formSubmit = async (value) => {
         try {
+            const guestUserId = localStorage.getItem('guestUserId');
             const input = {
                 userName: value.userName,
                 email: value.email,
@@ -50,7 +51,8 @@ const RegisterPage = () => {
                 country: value.country,
                 preferredLanguage: value.preferredLanguage,
                 password: value.password,
-                confirmPassword: value.confirmPassword
+                confirmPassword: value.confirmPassword,
+                guestUserId: guestUserId || undefined
             }
             const result = await apiProvider.register(input)
 

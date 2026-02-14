@@ -7,7 +7,9 @@ import subcategoryVariants from "../../data/subcategoryVariants.json";
 import { toast } from "react-toastify";
 import { useTranslation } from "../../context/TranslationContext";
 import HomeApi from "../../apiProvider/homeApi";
-import { BASE_URL,IMAGE_URL } from "../../network/apiClient";
+import apiCart from "../../apiProvider/addToCartApi";
+import { BASE_URL, IMAGE_URL } from "../../network/apiClient";
+import { getOrGenerateGuestId } from "../../utils/guestIdHelper";
 
 const ProductSpecs = () => {
     const { subCategoryId, variantId: childCategoryId } = useParams();
@@ -45,34 +47,33 @@ const ProductSpecs = () => {
                 const products = response.response?.data || [];
                 setProductList(products);
 
-                // Set specs for the table
-                const formattedSpecs = products.map((item, idx) => ({
-                    ...item,
-                    uniqueId: item._id || idx,
-                    // Map API fields
-                    partNo: item.productCode || item.productName,
-                    id: item.id || '-', // Placeholder if not in API
-                    od: item.od || '-',
-                    thk: item.thk || '-',
-                    material: item.material || '-', // You might need to check key names
-                    mouldNo: item.mouldNo || '-'
-                }));
-                setSpecs(formattedSpecs);
 
-                // Set hero product logic
                 if (products.length > 0) {
                     const hero = products[0];
                     setHeroProduct(hero);
 
-                    setAs568aSpecs(hero.as_568a_standard || []);
-                    setJisSpecs(hero.jis_b_2401_standard || []);
+                    // Combine both standards
+                    const standards = [
+                        ...(hero.as_568a_standard || []),
+                        ...(hero.jis_b_2401_standard || [])
+                    ];
 
-                    // Set active tab based on available data
-                    if (hero.as_568a_standard?.length > 0) {
-                        setActiveTab('as568a');
-                    } else if (hero.jis_b_2401_standard?.length > 0) {
-                        setActiveTab('jis');
-                    }
+                    const formattedSpecs = standards.map((std, index) => ({
+                        uniqueId: `${std.sku}-${index}`,
+
+                        partNo: std.sizeCode,
+                        id: std.metric_id_mm,
+                        idTolerance: std.metric_id_tolerance_mm,
+                        cs: std.metric_cs_mm,
+                        csTolerance: std.metric_cs_tolerance_mm,
+                        sku: std.sku,
+
+                        price: Number(std.price || 0),
+                        stock: Number(std.stock || 0),
+                    }));
+
+                    setSpecs(formattedSpecs);
+
 
                     // Sync variantData for display
                     setVariantData({
@@ -102,11 +103,11 @@ const ProductSpecs = () => {
         const lowerTerm = searchTerm.toLowerCase();
         return (
             (item.partNo && item.partNo.toLowerCase().includes(lowerTerm)) ||
-            (item.material && item.material.toLowerCase().includes(lowerTerm)) ||
-            (item.mouldNo && item.mouldNo.toLowerCase().includes(lowerTerm)) ||
+            (item.cs && item.cs.toLowerCase().includes(lowerTerm)) ||
+            (item.sku && item.sku.toLowerCase().includes(lowerTerm)) ||
             (item.id && String(item.id).toLowerCase().includes(lowerTerm)) ||
-            (item.od && String(item.od).toLowerCase().includes(lowerTerm)) ||
-            (item.thk && String(item.thk).toLowerCase().includes(lowerTerm))
+            (item.idTolerance && String(item.idTolerance).toLowerCase().includes(lowerTerm)) ||
+            (item.csTolerance && String(item.csTolerance).toLowerCase().includes(lowerTerm))
         );
     });
 
@@ -126,18 +127,66 @@ const ProductSpecs = () => {
         });
     };
 
-    const handleAddToCart = (item) => {
+    const handleAddToCart = async (item) => {
         const qty = quantities[item.uniqueId] || 1;
-        dispatch(addToCart({
-            id: item.partNo,
-            name: `${variantData?.name || 'Product'} - ${item.partNo}`,
-            partNo: item.partNo,
-            quantity: qty,
-            image: variantData?.image || "/img/product-seal-1.png"
-        }));
-        toast.success(`Added ${qty} x ${item.partNo} to cart!`, {
-            style: { boxShadow: 'none', border: '1px solid #e2e8f0' }
-        });
+
+        const price = Number(item.price || 0);
+        const totalPrice = price * qty;
+
+        // Guest/User ID logic
+        const token = localStorage.getItem('userToken');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const guestId = getOrGenerateGuestId();
+
+        let payload = {
+            products: [
+                {
+                    productId: heroProduct?._id, // Using root product ID
+                    variantName: item.partNo,
+                    id: item.id,
+                    idTolerance: item.idTolerance,
+                    cs: item.cs,
+                    csTolerance: item.csTolerance,
+                    sku: item.sku,
+                    quantity: qty,
+                    mrpPrice: price,
+                }
+            ],
+            total: totalPrice,
+            subtotal: totalPrice
+        };
+
+        if (token && user._id) {
+            payload.type = 'user';
+            payload.userId = user._id;
+            payload.userType = 'user';
+        } else {
+            payload.type = 'guest';
+            payload.guestUserId = guestId;
+            payload.userType = 'guest';
+        }
+
+        try {
+            const result = await apiCart.addToCart(payload);
+            if (result && result.status && result.response) {
+                dispatch(addToCart({
+                    id: item.uniqueId,
+                    name: `${variantData?.name || 'Product'} - ${item.partNo}`,
+                    partNo: item.partNo,
+                    quantity: qty,
+                    // totalPrice: totalPrice,
+                    image: variantData?.image || "/img/product-seal-1.png"
+                }));
+                toast.success(`Added ${qty} x ${item.partNo} to cart!`, {
+                    style: { boxShadow: 'none', border: '1px solid #e2e8f0' }
+                });
+            } else {
+                toast.error(result?.response || 'Failed to add to cart');
+            }
+        } catch (error) {
+            console.error("Add to cart error", error);
+            toast.error('An error occurred while adding to cart.');
+        }
     };
 
     if (loading) return (
@@ -150,7 +199,7 @@ const ProductSpecs = () => {
 
     return (
         <div className="product-specs-page pb-5" style={{ marginTop: '100px', backgroundColor: '#f8f9fa', minHeight: '80vh' }}>
-            <div className="container" style={{paddingTop:"20px"}}>
+            <div className="container">
 
                 {/* Modern Product Intro Section (Dark Theme Hero) */}
                 <div className="card border-0 shadow-lg mb-5 overflow-hidden rounded-4">
@@ -162,7 +211,7 @@ const ProductSpecs = () => {
                             <img
                                 src={
                                     heroProduct?.productImage?.[0]
-                                        ? `${IMAGE_URL}/${heroProduct.productImage[0].docPath}/${heroProduct.productImage[0].docName}`
+                                        ? `${IMAGE_URL}${heroProduct.productImage[0].docPath}/${heroProduct.productImage[0].docName}`
                                         : "/img/product-seal-1.png"
                                 }
                                 alt={heroProduct?.productName}
@@ -231,177 +280,6 @@ const ProductSpecs = () => {
                     </div>
                 </div>
 
-                {/* TECHNICAL SPECIFICATIONS SECTION - NEW */}
-                {(as568aSpecs.length > 0 || jisSpecs.length > 0) && (
-                    <div className="card border-0 shadow-lg rounded-4 mb-4">
-                        <div className="card-header bg-white border-0 pt-4 px-4">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h4 className="fw-bold mb-1">
-                                        <i className="bi bi-rulers me-2" style={{ color: 'var(--primary-color)' }}></i>
-                                        Technical Specifications
-                                    </h4>
-                                    <p className="text-muted small mb-0">
-                                        <i className="bi bi-info-circle me-1"></i>
-                                        Engineering reference measurements and tolerances
-                                    </p>
-                                </div>
-                                <button
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={() => setShowTechSpecs(!showTechSpecs)}
-                                >
-                                    <i className={`bi bi-chevron-${showTechSpecs ? 'up' : 'down'} me-1`}></i>
-                                    {showTechSpecs ? 'Hide' : 'View'} Details
-                                </button>
-                            </div>
-                        </div>
-
-                        {showTechSpecs && (
-                            <div className="card-body p-4">
-                                {/* Tabs */}
-                                <ul className="nav nav-pills mb-4">
-                                    {as568aSpecs.length > 0 && (
-                                        <li className="nav-item">
-                                            <button
-                                                className={`nav-link ${activeTab === 'as568a' ? 'active' : ''}`}
-                                                onClick={() => setActiveTab('as568a')}
-                                                style={activeTab === 'as568a' ? { backgroundColor: 'var(--primary-color)', borderColor: 'var(--primary-color)' } : {}}
-                                            >
-                                                <i className="bi bi-flag-fill me-2"></i>
-                                                AS 568A Standard
-                                            </button>
-                                        </li>
-                                    )}
-                                    {jisSpecs.length > 0 && (
-                                        <li className="nav-item ms-2">
-                                            <button
-                                                className={`nav-link ${activeTab === 'jis' ? 'active' : ''}`}
-                                                onClick={() => setActiveTab('jis')}
-                                                style={activeTab === 'jis' ? { backgroundColor: 'var(--primary-color)', borderColor: 'var(--primary-color)' } : {}}
-                                            >
-                                                <i className="bi bi-flag-fill me-2"></i>
-                                                JIS B 2401 Standard
-                                            </button>
-                                        </li>
-                                    )}
-                                </ul>
-
-                                {/* AS 568A Table */}
-                                {activeTab === 'as568a' && as568aSpecs.length > 0 && (
-                                    <div className="table-responsive">
-                                        <table className="table table-bordered table-sm table-hover">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th rowSpan="2" className="align-middle text-center fw-bold">Size Code</th>
-                                                    <th colSpan="3" className="text-center bg-info bg-opacity-10 fw-bold">Nominal (IN)</th>
-                                                    <th colSpan="4" className="text-center bg-warning bg-opacity-10 fw-bold">Standard (IN)</th>
-                                                    <th colSpan="4" className="text-center bg-success bg-opacity-10 fw-bold">Metric (MM)</th>
-                                                </tr>
-                                                <tr>
-                                                    {/* Nominal */}
-                                                    <th className="bg-info bg-opacity-10 small">ID</th>
-                                                    <th className="bg-info bg-opacity-10 small">OD</th>
-                                                    <th className="bg-info bg-opacity-10 small">CS</th>
-                                                    {/* Standard */}
-                                                    <th className="bg-warning bg-opacity-10 small">ID</th>
-                                                    <th className="bg-warning bg-opacity-10 small">±</th>
-                                                    <th className="bg-warning bg-opacity-10 small">CS</th>
-                                                    <th className="bg-warning bg-opacity-10 small">±</th>
-                                                    {/* Metric */}
-                                                    <th className="bg-success bg-opacity-10 small">ID</th>
-                                                    <th className="bg-success bg-opacity-10 small">±</th>
-                                                    <th className="bg-success bg-opacity-10 small">CS</th>
-                                                    <th className="bg-success bg-opacity-10 small">±</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {as568aSpecs.map((spec, idx) => (
-                                                    <tr key={idx}>
-                                                        <td className="fw-bold text-center font-monospace" style={{ color: 'var(--primary-color)' }}>
-                                                            {spec.sizeCode}
-                                                        </td>
-                                                        {/* Nominal */}
-                                                        <td className="text-center small">{spec.nominal_id_in || '-'}</td>
-                                                        <td className="text-center small">{spec.nominal_od_in || '-'}</td>
-                                                        <td className="text-center small">{spec.nominal_cs_in || '-'}</td>
-                                                        {/* Standard */}
-                                                        <td className="text-center small">{spec.standard_id_in || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.standard_id_tolerance_in || '-'}</td>
-                                                        <td className="text-center small">{spec.standard_cs_in || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.standard_cs_tolerance_in || '-'}</td>
-                                                        {/* Metric */}
-                                                        <td className="text-center small fw-semibold">{spec.metric_id_mm || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.metric_id_tolerance_mm || '-'}</td>
-                                                        <td className="text-center small fw-semibold">{spec.metric_cs_mm || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.metric_cs_tolerance_mm || '-'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-
-                                {/* JIS B 2401 Table */}
-                                {activeTab === 'jis' && jisSpecs.length > 0 && (
-                                    <div className="table-responsive">
-                                        <table className="table table-bordered table-sm table-hover">
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th rowSpan="2" className="align-middle text-center fw-bold">Size Code</th>
-                                                    <th colSpan="4" className="text-center bg-success bg-opacity-10 fw-bold">Metric (MM)</th>
-                                                    <th colSpan="4" className="text-center bg-warning bg-opacity-10 fw-bold">Inches (IN)</th>
-                                                </tr>
-                                                <tr>
-                                                    {/* Metric */}
-                                                    <th className="bg-success bg-opacity-10 small">ID</th>
-                                                    <th className="bg-success bg-opacity-10 small">±</th>
-                                                    <th className="bg-success bg-opacity-10 small">CS</th>
-                                                    <th className="bg-success bg-opacity-10 small">±</th>
-                                                    {/* Inches */}
-                                                    <th className="bg-warning bg-opacity-10 small">ID</th>
-                                                    <th className="bg-warning bg-opacity-10 small">±</th>
-                                                    <th className="bg-warning bg-opacity-10 small">CS</th>
-                                                    <th className="bg-warning bg-opacity-10 small">±</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {jisSpecs.map((spec, idx) => (
-                                                    <tr key={idx}>
-                                                        <td className="fw-bold text-center font-monospace" style={{ color: 'var(--primary-color)' }}>
-                                                            {spec.sizeCode}
-                                                        </td>
-                                                        {/* Metric */}
-                                                        <td className="text-center small fw-semibold">{spec.metric_id_mm || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.metric_id_tolerance_mm || '-'}</td>
-                                                        <td className="text-center small fw-semibold">{spec.metric_cs_mm || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.metric_cs_tolerance_mm || '-'}</td>
-                                                        {/* Inches */}
-                                                        <td className="text-center small">{spec.inch_id_in || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.inch_id_tolerance_in || '-'}</td>
-                                                        <td className="text-center small">{spec.inch_cs_in || '-'}</td>
-                                                        <td className="text-center small text-muted">{spec.inch_cs_tolerance_in || '-'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-
-                                {/* Info Alert */}
-                                <div className="alert alert-info d-flex align-items-start mb-0 mt-3">
-                                    <i className="bi bi-info-circle-fill me-2 mt-1"></i>
-                                    <small>
-                                        <strong>Note:</strong> These are standard engineering measurements.
-                                        {activeTab === 'as568a'
-                                            ? ' AS 568A is the American standard for O-Ring dimensions with nominal (reference), standard (decimal), and metric measurements.'
-                                            : ' JIS B 2401 is the Japanese Industrial Standard. G-series is used for static sealing applications, P-series for dynamic sealing applications.'
-                                        }
-                                    </small>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Filter & Controls */}
                 <div className="card border-0 shadow-sm rounded-4 mb-4">
@@ -433,11 +311,11 @@ const ProductSpecs = () => {
                             <thead className="small text-uppercase fw-bold" style={{ backgroundColor: 'var(--primary-color)' }}>
                                 <tr>
                                     <th className="py-3 ps-4 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>Part No.</th>
-                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>ID (mm)</th>
-                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>OD (mm)</th>
-                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>Thk (mm)</th>
-                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>Material</th>
-                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>Mould No.</th>
+                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>ID </th>
+                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>±</th>
+                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>CS</th>
+                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>±</th>
+                                    <th className="py-3 text-white" style={{ backgroundColor: 'var(--primary-color)' }}>SKU</th>
                                     <th className="py-3 text-center text-white" style={{ width: '100px', backgroundColor: 'var(--primary-color)' }}>Qty</th>
                                     <th className="py-3 pe-4 text-center text-white" style={{ backgroundColor: 'var(--primary-color)' }}>Action</th>
                                 </tr>
@@ -448,14 +326,16 @@ const ProductSpecs = () => {
                                         <tr key={item.uniqueId}>
                                             <td className="fw-bold ps-4 font-monospace" style={{ color: 'var(--primary-color)' }}>{item.partNo}</td>
                                             <td>{item.id}</td>
-                                            <td>{item.od}</td>
-                                            <td>{item.thk}</td>
+                                            <td>
+                                                <span className="badge fw-medium px-2 py-1 rounded-pill bg-light text-dark border">{item.idTolerance}</span>
+                                            </td>
+                                            <td>{item.cs}</td>
                                             <td>
                                                 <span className="badge fw-medium px-2 py-1 rounded-pill bg-light text-dark border">
-                                                    {item.material}
+                                                    {item.csTolerance}
                                                 </span>
                                             </td>
-                                            <td className="text-muted small font-monospace">{item.mouldNo}</td>
+                                            <td className="text-muted small font-monospace">{item.sku}</td>
                                             <td>
                                                 <input
                                                     type="number"
