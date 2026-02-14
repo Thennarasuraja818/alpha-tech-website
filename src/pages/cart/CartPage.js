@@ -160,7 +160,7 @@ const CartPage = () => {
                     <div className="row g-4">
                         {/* Left Column: Cart Items Table */}
                         <div className="col-lg-8">
-                            <div className="cart-table-wrapper bg-white" style={{ padding: '18px',borderRadius:"8px" }}> {/* Reduced padding from 40px to 24px */}
+                            <div className="cart-table-wrapper bg-white" style={{ padding: '18px', borderRadius: "8px" }}> {/* Reduced padding from 40px to 24px */}
                                 {/* Table Header - Improved heading */}
                                 <div className="table-header d-flex align-items-center " style={{ borderBottom: '2px solid #333' }}> {/* Reduced padding/margin */}
                                     <div style={{ width: '50%', display: "flex", paddingLeft: '100px' }}> {/* Reduced paddingLeft */}
@@ -184,9 +184,9 @@ const CartPage = () => {
                                                     src={item.image}
                                                     alt={item.name}
                                                     style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                                    onError={(e) => {
-                                                        e.target.src = "/img/product-seal-1.png";
-                                                    }}
+                                                // onError={(e) => {
+                                                //     e.target.src = "/img/product-seal-1.png";
+                                                // }}
                                                 />
                                             </div>
                                             <div>
