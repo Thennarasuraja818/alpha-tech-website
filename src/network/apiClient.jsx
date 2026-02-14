@@ -8,10 +8,10 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 // export const IMAGE_URL = "https://api.ilap.oceansoft.online/api/v1/user/"
 // export const BASE_URL = "https://api.ilap.me/api/v1/user";
 // export const IMAGE_URL = "https://api.ilap.me/api/v1/user/"
-// export const BASE_URL = "https://alpha-tech-backend.onrender.com/api/mobile-api";
-// export const IMAGE_URL = "https://alpha-tech-backend.onrender.com/api/public/"
-export const BASE_URL = "http://192.168.1.22:4002/api/mobile-api";
-export const IMAGE_URL = "http://192.168.1.22:4002/api/public/"
+export const BASE_URL = "https://alpha-tech-backend.onrender.com/api/mobile-api";
+export const IMAGE_URL = "https://alpha-tech-backend.onrender.com/api/public/"
+// export const BASE_URL = "http://192.168.1.22:4002/api/mobile-api";
+// export const IMAGE_URL = "http://192.168.1.22:4002/api/public/"
 // export const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // export const IMAGE_URL = process.env.REACT_APP_IMAGE_URL;
 export const NEXT_PUBLIC_TRANSLATE_KEY = 'AIzaSyD4rcn8bz9Nz8eqWlOJ-BjBMFau52NAtgE'
