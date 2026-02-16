@@ -42,6 +42,28 @@ class CartApiProvider {
     }
   }
 
+  async getCartCount(userId, params = {}) {
+    try {
+      const response = await apiClient.get(`cart-count/${userId}`, { params });
+      if ((response.status == 200 || response.status == 201) && response) {
+        return {
+          status: response.status,
+          response: response.data
+        };
+      } else {
+        return {
+          status: false,
+          response: []
+        };
+      }
+    } catch (error) {
+      return {
+        status: false,
+        response: []
+      };
+    }
+  }
+
   async removeToCart(id) {
     try {
       const response = await apiClient.delete(`cart-detail/remove-item/${id}`);
@@ -64,6 +86,27 @@ class CartApiProvider {
       return {
         status: false,
         response: []
+      };
+    }
+  }
+
+  async deleteCart(cartId, productId, offer) {
+    try {
+      const response = await apiClient.delete(`cart/${cartId}`, {
+        params: { productId, offer }
+      });
+      if (response.status === 200 || response.status === 201) {
+        return {
+          status: true,
+          response: response.data
+        };
+      }
+      return { status: false, response: response.data };
+    } catch (error) {
+      console.error("Error in deleteCart:", error);
+      return {
+        status: false,
+        response: error.response?.data || "Error deleting item"
       };
     }
   }

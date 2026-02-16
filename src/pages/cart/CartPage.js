@@ -7,6 +7,7 @@ import apiCart from "../../apiProvider/addToCartApi";
 const CartPage = () => {
     const dispatch = useDispatch();
     const [cartItems, setCartItems] = useState([]);
+    const [cartId, setCartId] = useState(null);
     const [apiCartData, setApiCartData] = useState({
         subtotal: 0,
         total: 0
@@ -49,21 +50,20 @@ const CartPage = () => {
         }
     };
 
-    const handleRemoveItem = async (productCartId) => {
+    const handleRemoveItem = async (productId, offer) => {
         try {
-            const token = localStorage.getItem('userToken');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const guestId = localStorage.getItem('guestUserId');
-
-            if (token && user._id) {
-                await apiCart.removeFromCart(user._id, productCartId);
-            } else if (guestId) {
-                await apiCart.removeFromCart(guestId, productCartId);
+            if (!cartId) {
+                console.error("Cart ID not found");
+                return;
             }
-
-            // Refresh cart after removal
-            await getCartDetails();
-            dispatch(removeFromCart(productCartId));
+            const result = await apiCart.deleteCart(cartId, productId, offer);
+            if (result.status) {
+                // Refresh cart after removal
+                await getCartDetails();
+                dispatch(removeFromCart(productId));
+            } else {
+                console.error("Failed to remove item:", result.response);
+            }
         } catch (error) {
             console.error("Error removing item:", error);
         }
@@ -89,6 +89,7 @@ const CartPage = () => {
             // API returns an array, get the first cart object
             if (result && result.response?.data && result.response.data.length > 0) {
                 const apiData = result.response.data[0]; // Get first cart object from array
+                setCartId(apiData._id);
 
                 // Map the products array to cart items format
                 const mappedItems = apiData.products.map((product) => ({
@@ -96,7 +97,7 @@ const CartPage = () => {
                     productId: product._id,
                     name: product.productName,
                     partNo: product.attributes?.variantName || 'N/A',
-                    price: product.price,
+                    totalAmount: product.totalAmount,
                     mrpPrice: product.mrpPrice,
                     quantity: product.quantity,
                     image: product.productImage && product.productImage.length > 0
@@ -160,88 +161,101 @@ const CartPage = () => {
                     <div className="row g-4">
                         {/* Left Column: Cart Items Table */}
                         <div className="col-lg-8">
-                            <div className="cart-table-wrapper bg-white" style={{ padding: '18px', borderRadius: "8px" }}> {/* Reduced padding from 40px to 24px */}
-                                {/* Table Header - Improved heading */}
-                                <div className="table-header d-flex align-items-center " style={{ borderBottom: '2px solid #333' }}> {/* Reduced padding/margin */}
-                                    <div style={{ width: '50%', display: "flex", paddingLeft: '100px' }}> {/* Reduced paddingLeft */}
-                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '16px', letterSpacing: '1.5px', color: '#000' }}>PRODUCT</span> {/* Increased font, added weight */}
+                            <div className="cart-table-wrapper bg-white" style={{ padding: '20px 24px', borderRadius: "8px" }}>
+                                {/* Table Header */}
+                                <div className="table-header d-flex align-items-center pb-3 mb-2" style={{ borderBottom: '2px solid #333' }}>
+                                    <div style={{ width: '35%', paddingLeft: '80px' }}>
+                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '13px', letterSpacing: '1.2px', color: '#000' }}>PRODUCT</span>
                                     </div>
-                                    <div style={{ width: '25%', textAlign: 'center' }}>
-                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '16px', letterSpacing: '1.5px', color: '#000' }}>PRICE</span> {/* Increased font, added weight */}
+                                    <div style={{ width: '15%', textAlign: 'center' }}>
+                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '13px', letterSpacing: '1.2px', color: '#000' }}>UNIT PRICE</span>
                                     </div>
-                                    <div style={{ width: '25%', textAlign: 'center' }}>
-                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '16px', letterSpacing: '1.5px', color: '#000' }}>ACTION</span> {/* Increased font, added weight */}
+                                    <div style={{ width: '18%', textAlign: 'center' }}>
+                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '13px', letterSpacing: '1.2px', color: '#000' }}>QUANTITY</span>
+                                    </div>
+                                    <div style={{ width: '17%', textAlign: 'center' }}>
+                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '13px', letterSpacing: '1.2px', color: '#000' }}>TOTAL</span>
+                                    </div>
+                                    <div style={{ width: '15%', textAlign: 'center' }}>
+                                        <span className="text-uppercase fw-semibold" style={{ fontSize: '13px', letterSpacing: '1.2px', color: '#000' }}>ACTION</span>
                                     </div>
                                 </div>
 
                                 {/* Cart Items */}
                                 {cartItems.map((item) => (
-                                    <div key={item.id} className="cart-item-row d-flex align-items-center pt-3" style={{ borderBottom: '1px solid #eee' }}> {/* Reduced padding from py-4 to py-3 */}
+                                    <div key={item.id} className="cart-item-row d-flex align-items-center" style={{ borderBottom: '1px solid #eee', padding: '16px 0' }}>
                                         {/* Product Image and Name */}
-                                        <div className="d-flex align-items-center" style={{ width: '50%' }}>
-                                            <div className="product-image-wrapper bg-white me-3" style={{ width: '80px', height: '80px', border: '1px solid #e0e0e0', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> {/* Reduced image size from 100px to 80px */}
+                                        <div className="d-flex align-items-center" style={{ width: '35%' }}>
+                                            <div className="product-image-wrapper bg-white me-3" style={{ width: '70px', height: '70px', border: '1px solid #e0e0e0', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 <img
                                                     src={item.image}
                                                     alt={item.name}
                                                     style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                                // onError={(e) => {
-                                                //     e.target.src = "/img/product-seal-1.png";
-                                                // }}
                                                 />
                                             </div>
-                                            <div>
-                                                <h6 className="mb-1 fw-medium" style={{ fontSize: '16px', fontWeight: '500', color: '#222' }}> {/* Increased weight */}
+                                            <div style={{ flex: 1 }}>
+                                                <h6 className="mb-1 fw-medium" style={{ fontSize: '14px', fontWeight: '500', color: '#222', lineHeight: '1.4' }}>
                                                     {item.name}
                                                 </h6>
-                                                <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                                                    Part No: <span className="text-dark fw-medium">{item.partNo}</span> {/* Added emphasis */}
+                                                <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>
+                                                    {item.partNo}
                                                 </p>
-                                                <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                                                    Qty: <span className="text-dark fw-medium">{item.quantity}</span> {/* Added emphasis */}
-                                                </p>
-                                                {item.offerAmount > 0 && (
-                                                    <p className="mb-0 mt-1" style={{ fontSize: '12px', color: '#27ae60', fontWeight: '500' }}> {/* Added weight */}
-                                                        <del className="text-muted me-2">₹{item.mrpPrice}</del>
-                                                        Save ₹{item.offerAmount}
-                                                    </p>
-                                                )}
                                             </div>
                                         </div>
 
-                                        {/* Price */}
-                                        <div style={{ width: '25%', textAlign: 'center' }}>
-                                            <span className="fw-semibold" style={{ fontSize: '18px', color: '#000' }}> {/* Increased font size and weight */}
-                                                ₹ {(item.price * item.quantity).toLocaleString()}
+                                        {/* Unit Price */}
+                                        <div style={{ width: '35%', textAlign: 'center' }}>
+                                            <div>
+                                                <span style={{ fontSize: '14px', color: '#333', fontWeight: '500' }}>
+                                                    ₹{item.mrpPrice}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Quantity */}
+                                        <div style={{ width: '15%', textAlign: 'center' }}>
+                                            <div className="modern-quantity-selector">
+                                                <button
+                                                    className={`quantity-btn ${item.quantity <= 1 ? 'disabled' : ''}`}
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    −
+                                                </button>
+                                                <span className="quantity-value">{item.quantity}</span>
+                                                <button
+                                                    className="quantity-btn"
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Total Price */}
+                                        <div style={{ width: '17%', textAlign: 'center' }}>
+                                            <span className="fw-semibold" style={{ fontSize: '15px', color: '#000' }}>
+                                                ₹{item.totalAmount}
                                             </span>
-                                            {item.quantity > 1 && (
-                                                <p className="mb-0 text-muted mt-1" style={{ fontSize: '12px' }}>
-                                                    ₹{item.price.toLocaleString()} × {item.quantity}
-                                                </p>
-                                            )}
                                         </div>
 
                                         {/* Remove Action */}
                                         <div style={{ width: '25%', textAlign: 'center' }}>
                                             <button
                                                 className="btn btn-link text-uppercase"
-                                                onClick={() => handleRemoveItem(item.id)}
+                                                onClick={() => handleRemoveItem(item.id, item.offerType)}
                                                 style={{
-                                                    fontSize: '14px',
-                                                    letterSpacing: '1px',
+                                                    fontSize: '12px',
+                                                    letterSpacing: '0.5px',
                                                     textDecoration: 'none',
                                                     color: '#dc3545',
                                                     fontWeight: '500',
-                                                    padding: '6px 12px',
-                                                    borderRadius: '4px',
-                                                    transition: 'all 0.2s ease'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.target.style.backgroundColor = '#fee';
-                                                    e.target.style.color = '#c82333';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.target.style.backgroundColor = 'transparent';
-                                                    e.target.style.color = '#dc3545';
+                                                    padding: '5px 10px',
+                                                    borderRadius: '3px',
+                                                    transition: 'all 0.2s ease',
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 REMOVE
@@ -254,7 +268,7 @@ const CartPage = () => {
 
                         {/* Right Column: Order Summary */}
                         <div className="col-lg-4">
-                            <div className="order-summary-wrapper bg-white sticky-top" style={{ padding: '40px', top: '100px' }}>
+                            <div className="order-summary-wrapper bg-white sticky-top" style={{ padding: '40px', top: '100px', borderRadius: '8px' }}>
                                 <h5 className="text-uppercase mb-4" style={{ fontSize: '18px', letterSpacing: '2px', fontWeight: '600' }}>
                                     ORDER SUMMARY
                                 </h5>
@@ -362,6 +376,21 @@ const CartPage = () => {
                     color: #2c2c2c !important;
                 }
 
+                .btn-remove:hover {
+                    background-color: #fee !important;
+                    color: #c82333 !important;
+                }
+
+                /* Remove number input arrows */
+                input[type="number"]::-webkit-inner-spin-button,
+                input[type="number"]::-webkit-outer-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                input[type="number"] {
+                    -moz-appearance: textfield;
+                }
+
                 @media (max-width: 991px) {
                     .shopping-bag-title {
                         font-size: 36px;
@@ -375,6 +404,7 @@ const CartPage = () => {
                     .cart-item-row {
                         flex-direction: column;
                         align-items: flex-start !important;
+                        min-height: auto !important;
                     }
                     
                     .cart-item-row > div {
@@ -392,6 +422,57 @@ const CartPage = () => {
                         position: static !important;
                     }
                 }
+                    .modern-quantity-selector {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.modern-quantity-selector:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.quantity-btn {
+    padding: 8px 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    background: white;
+    color: #4a5568;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+    outline: none;
+}
+
+.quantity-btn:not(.disabled):hover {
+    background: #f7fafc;
+    color: #2b6cb0;
+}
+
+.quantity-btn.disabled {
+    color: #cbd5e0;
+    cursor: not-allowed;
+    background: #f7fafc;
+}
+
+.quantity-value {
+    width: 45px;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+}
             `}</style>
         </div>
     );

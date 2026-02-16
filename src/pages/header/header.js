@@ -5,6 +5,7 @@ import { useTranslation } from "../../context/TranslationContext";
 import HomeApi from "../../apiProvider/homeApi";
 import { IMAGE_URL } from "../../network/apiClient";
 import { logout } from "../../redux/authSlice";
+import apiCart from "../../apiProvider/addToCartApi";
 
 const Header = () => {
     const { translateSync } = useTranslation();
@@ -21,6 +22,7 @@ const Header = () => {
     const [categoryList, setCategoryList] = useState([]);
     const [subCategoryList, setSubCategoryList] = useState([]);
     const [showAccountMenu, setShowAccountMenu] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
     const dispatch = useDispatch();
 
     // Scroll listener
@@ -40,6 +42,7 @@ const Header = () => {
     useEffect(() => {
         fetchCategories();
         fetchSubCategories();
+        getCartCount();
     }, []);
 
     const fetchCategories = async () => {
@@ -59,6 +62,27 @@ const Header = () => {
         } catch (error) {
             console.error("Error fetching categories:", error);
             setCategoryList([]);
+        }
+    };
+
+    const getCartCount = async () => {
+        try {
+            const token = localStorage.getItem('userToken');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const guestId = localStorage.getItem('guestUserId');
+
+            let result;
+            if (token && user._id) {
+                result = await apiCart.getCartCount(user._id, { type: 'user', userType: 'user' });
+            } else if (guestId) {
+                result = await apiCart.getCartCount(guestId, { type: 'guest', userType: 'guest' });
+            }
+
+            console.error("Cart Count API Response:", result?.response?.data);
+            setCartCount(result?.response?.data?.count || 0)
+
+        } catch (error) {
+            console.error("Error fetching cart details:", error);
         }
     };
 
@@ -201,7 +225,7 @@ const Header = () => {
                         <div className="cart-wrapper position-relative" style={{ cursor: 'pointer' }} onClick={() => navigate('/cart')}>
                             <i className="bi bi-cart3 fs-4" style={{ color: 'var(--primary-color)' }}></i>
                             <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                                {useSelector((state) => state.cart?.totalQuantity || 0)}
+                                {cartCount}
                             </span>
                         </div>
 
@@ -237,6 +261,7 @@ const Header = () => {
                                         onClick={() => {
                                             dispatch(logout());
                                             localStorage.removeItem("userToken");
+                                            localStorage.removeItem("user");
                                             navigate("/");
                                         }}
                                     >
