@@ -191,19 +191,11 @@ class ApiProvider {
 
   async addAddress(input) {
     try {
-      const response = await apiClient.post("address/add", input);
+      const response = await apiClient.post("address", input);
       const message = response.data?.message ?? "Something went wrong";
       if (response.status == 200 || response.status == 201) {
-        toast(message)
         // notification.showAlertNotification(response.data.message, true);
         return { status: response.status, response: response };
-      } else {
-        toast(message)
-        // notification.showAlertNotification(message, false);/
-        return {
-          status: false,
-          response: response
-        };
       }
     } catch (error) {
       // notification.showAxiosErrorAlert(error);
@@ -211,6 +203,54 @@ class ApiProvider {
         status: false,
         response: error
       }
+    }
+  }
+
+
+  async getAddress(userID, type) {
+    try {
+      const response = await apiClient.get(`address/${userID}`, {
+        params: { type }
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        return { status: response.status, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async updateAddress(UserAddressId, input) {
+    try {
+      const response = await apiClient.patch(`address/${UserAddressId}`, input);
+      const message = response.data?.message ?? "Something went wrong";
+      if (response.status == 200 || response.status == 201) {
+        // notification.showAlertNotification(response.data.message, true);
+        return { status: response.status, response: response };
+      }
+    } catch (error) {
+      // notification.showAxiosErrorAlert(error);
+      return {
+        status: false,
+        response: error
+      }
+    }
+  }
+
+  async deleteAddress(UserAddressId) {
+    try {
+      const response = await apiClient.delete(`address/${UserAddressId}`);
+
+      if (response.status === 200 || response.status === 201) {
+        return { status: response.status, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
     }
   }
 

@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-// import { Country, State, City } from 'country-state-city';
 import { useSearchParams, useNavigate } from "react-router-dom";
 
-import apiProvider from "../../apiProvider/categoryApi";
-import ApiProvider from "../../apiProvider/addToCartApi"
+// import apiProvider from "../../apiProvider/categoryApi";
+// import ApiProvider from "../../apiProvider/addToCartApi"
 import getApi from "../../apiProvider/api"
 import CheckoutApiProvider from "../../apiProvider/checkoutApi";
 import { Country, State, City } from 'country-state-city';
@@ -14,47 +13,37 @@ import { IMAGE_URL } from "../../network/apiClient";
 import { useTranslation } from "../../context/TranslationContext";
 
 import './myaccount.css';
+import apiProvider from "../../apiProvider/api";
+import apiCart from "../../apiProvider/addToCartApi";
+import { toast } from "react-toastify";
 
 const countryList = Country.getAllCountries();
 
 const CheckoutSchema = Yup.object().shape({
-    firstName: Yup.string().required('Full name is required'),
-    // lastName: Yup.string().required('Last name is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    phoneNo: Yup.string().required('Phone no is required'),
-    address1: Yup.string().required('Address is required'),
-    // address2: Yup.string().required('Address is required'),
-    // country: Yup.string().required("Country is required"),
-    // state: Yup.string().required('State is required'),
-    // city: Yup.string().required('City is required'),
-    // zipCode: Yup.string().required('Zip code is required'),
+    selectedAddress: Yup.string().required('Please select a delivery address'),
     paymentMethod: Yup.string().required("Please select a payment method"),
-
-    // acceptTerms: Yup.boolean()
-    //     .oneOf([true], "You must accept the terms and conditions")
-    //     .required("You must accept the terms"),
 });
-
 
 const CheckoutPage = () => {
     const countryList = Country.getAllCountries();
     const navigate = useNavigate();
     const { translateSync, currentLanguage, setCurrentLanguage } = useTranslation();
-
+    const user = useSelector((state) => state.auth.user);
     const [searchParams] = useSearchParams();
     const type = searchParams.get("type");
+    console.error("type :", searchParams.get("type"))
     const [userDetails, setUserDetails] = useState([])
     const courseDatas = useSelector((state) => state.training);
     const [courseDetails, setCourseDetails] = useState([])
-    const [stateList, setStateList] = useState([]);
-    const [cityList, setCityList] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [currencys, setCurrencys] = useState([]);
     const [transectionCurrecy, settransectionCurrecy] = useState({});
-
+    const [addresses, setAddresses] = useState([]);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [showAddressModal, setShowAddressModal] = useState(false);
 
     const [cartListDetails, setCartListDetails] = useState([])
-    const [totalPrice, setTotalPrice] = useState("0")
+    const [totalPrice, setTotalPrice] = useState(0)
 
     const [showModal, setShowModal] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
@@ -74,19 +63,19 @@ We understand that schedules change. That's why our training program cancellatio
 is designed with flexibility:
 
 For Individual Participants:
-• Cancel 7+ days before course start: Full refund or free course transfer
-• Cancel 3–6 days before: 50% refund
-• Cancel <3 days before: No refund
+- Cancel 7+ days before course start: Full refund or free course transfer
+- Cancel 3–6 days before: 50% refund
+- Cancel <3 days before: No refund
 
 For Corporate Training & Group Bookings:
-• Cancel with 14+ days' notice: Full refund
-• Rescheduling accepted with 7+ days' notice, based on availability
+- Cancel with 14+ days' notice: Full refund
+- Rescheduling accepted with 7+ days' notice, based on availability
 
 Refund Policy for Professional Training Courses
 Our refund policy is fair, fast, and clear:
-• Refunds processed within 10–15 business days
-• Refunds issued to the original payment method
-• No refunds for:
+- Refunds processed within 10–15 business days
+- Refunds issued to the original payment method
+- No refunds for:
  - No-show attendees
  - Partially attended sessions
  - Courses where more than 25% was completed
@@ -96,9 +85,9 @@ cost.
 
 Course Transfer Policy
 Need to switch courses?
-• Request a transfer 5+ days before your training start date
-• Transfer allowed to any available course of equal or lesser value
-• Only one free transfer per booking is permitted`
+- Request a transfer 5+ days before your training start date
+- Transfer allowed to any available course of equal or lesser value
+- Only one free transfer per booking is permitted`
         },
         terms: {
             title: "Terms & Conditions",
@@ -109,20 +98,20 @@ Academy. Unauthorized sharing or reproduction is strictly prohibited.
 
 2. Learner Code of Conduct
 To maintain a high-quality learning environment, all learners are expected to:
-• Attend sessions punctually and actively participate
-• Respect trainers and fellow participants
-• Maintain professional behavior during all interactions
+- Attend sessions punctually and actively participate
+- Respect trainers and fellow participants
+- Maintain professional behavior during all interactions
 
 3. Certification Eligibility
 To receive a Certificate of Completion, participants must:
-• Attend at least 80% of the course duration
-• Complete all required assignments or assessments
+- Attend at least 80% of the course duration
+- Complete all required assignments or assessments
 
 4. Program Schedule & Instructor Changes
 iLap Training Academy reserves the right to:
-• Update course schedules, delivery formats, or locations
-• Replace instructors with equally qualified professionals
-• Cancel underbooked sessions with full refunds or alternative options
+- Update course schedules, delivery formats, or locations
+- Replace instructors with equally qualified professionals
+- Cancel underbooked sessions with full refunds or alternative options
 
 5. Data Privacy
 We are committed to protecting your data. All personal information will be used strictly for
@@ -141,17 +130,17 @@ accordance with this policy.
 
 1. What Information We Collect
 We may collect the following types of data:
-• Personal identification information (Name, email address, phone number, etc.)
-• Course registration details
-• Payment and transaction history
-• Browser cookies and usage data
+- Personal identification information (Name, email address, phone number, etc.)
+- Course registration details
+- Payment and transaction history
+- Browser cookies and usage data
 
 2. How We Use Your Information
 Your information helps us to:
-• Register and manage your course enrollment
-• Provide customer support and respond to inquiries
-• Improve our content and services
-• Send important updates, promotional materials, and feedback requests (only with your
+- Register and manage your course enrollment
+- Provide customer support and respond to inquiries
+- Improve our content and services
+- Send important updates, promotional materials, and feedback requests (only with your
 consent)
 
 3. Cookies Policy
@@ -169,181 +158,170 @@ our services or comply with legal obligations.
 
 6. Your Rights
 You have the right to:
-• Access your data
-• Request corrections
-• Withdraw consent or request data deletion
+- Access your data
+- Request corrections
+- Withdraw consent or request data deletion
 To exercise these rights, contact us at info@ilap.me.`
         },
         contact: {
             title: "Contact Information",
             content: `Contact iLap Training Academy
 Have a question about our cancellation or refund policy?
-• Email: info@ilap.me
-• Phone: +971 4 88 35 988 | +971 50 255 0228
-• Head Office: Dubai, UAE
-• Business Hours: Sunday – Thursday | 9:00 AM – 5:00 PM GST`
-        }
-    };
-
-    const openPolicyModal = (policyKey) => {
-        setModalTitle(policies[policyKey].title);
-        setModalContent(policies[policyKey].content);
-        setShowModal(true);
-    };
-    useEffect(() => {
-        if (courseDatas && courseDatas.isGetList) {
-            getCourseDetails(courseDatas.id);
-        }
-    }, [courseDatas]);
-
-    const getCourseDetails = async (id) => {
-        const result = await apiProvider.getCourseDet(id);
-        if (result && result.status && result.response) {
-            setCourseDetails(result.response.data)
+- Email: info@ilap.me
+- Phone: +971 4 88 35 988 | +971 50 255 0228
+- Head Office: Dubai, UAE
+- Business Hours: Sunday – Thursday | 9:00 AM – 5:00 PM GST`
         }
     };
 
     const getCartDetails = async () => {
-        const result = await ApiProvider.getCart();
-        // console.log(result, "result-cart-user based details");
-        if (result && result.response && result.response.data && result.response.data.cartDetails.length > 0) {
-            setCartListDetails(result.response.data.cartDetails)
-            setTotalPrice(result.response.data.totalPrice)
+        const token = localStorage.getItem('userToken');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const guestId = localStorage.getItem('guestUserId');
+
+        let result;
+        if (token && user._id) {
+            result = await apiCart.getCart(user._id, { type: 'user', userType: 'user' });
+        } else if (guestId) {
+            result = await apiCart.getCart(guestId, { type: 'guest', userType: 'guest' });
+        }
+        if (result && result.response && result.response.data) {
+            const { products, total } = result.response.data[0];
+            console.error(products, "products");
+            console.error(total, "total");
+            setCartListDetails(products);
+            setTotalPrice(total);
         }
     };
 
-    const getPaymentMethods = async () => {
-        const result = await getApi.getPaymentMethod();
-        console.log(result, "result-getPaymentMethod");
-        if (result && result.response && result.response.data && result.response.data) {
-            setPaymentMethods(result.response.data.data)
-            // setTotalPrice(result.response.data.totalPrice)
-        }
-    };
-
-    const getCurrencys = async () => {
-        const result = await getApi.getCurrency();
-        console.log(result, "result-getCurrency");
-        if (result && result.response && result.response.data && result.response.data) {
-            let transecCurrency = await result.response.data.data.find(ival => ival.isTransection)
-            console.log(transecCurrency);
-            settransectionCurrecy(transecCurrency)
-            setCurrencys(result.response.data.data)
-            // setTotalPrice(result.response.data.totalPrice)
-        }
-    };
 
     useEffect(() => {
         getCartDetails()
-    }, [])
-
-    useEffect(() => {
-        getPaymentMethods()
-    }, [])
-
-    useEffect(() => {
-        getCurrencys()
-    }, [])
-
-
-    useEffect(() => {
-        getUserAddressDetails(); // Fetch count on page load
+        fetchAddresses();
     }, []);
 
-    const getUserAddressDetails = async () => {
+    const fetchAddresses = async () => {
         try {
-            const result = await ApiProvider.getUserDetails();
-            console.log(result, "result--rrrr");
+            const result = await apiProvider.getAddress(user?._id, 'customer');
+            console.error("result :", result.response?.data);
+            if (result && result.status) {
+                setAddresses(result.response?.data);
+            }
 
-            if (result.status && result.response) {
-                // Assuming the API returns cart items in response.data.cartDetails
-                setUserDetails(result.response.data.userDetail);
+            if (result.response.data.length > 0) {
+                setSelectedAddressId(result.response.data[0]._id);
+            }
+        } catch (error) {
+            console.error("Error fetching addresses:", error);
+        }
+    }
 
+    const formSubmit = async (values) => {
+        console.error("Submitting order:", values);
+
+        // Get selected address details
+        const selectedAddress = addresses.find(addr => addr._id === values.selectedAddress);
+
+        if (!selectedAddress) {
+            toast.error("Please select a delivery address");
+            return;
+        }
+
+        try {
+            const orderData = {
+                placedBy: user?._id,
+                placedByModel: 'User',
+
+                // Shipping address
+                shippingAddress: {
+                    street: selectedAddress.addressLine || '',
+                    city: selectedAddress.city || '',
+                    state: selectedAddress.state || '',
+                    postalCode: selectedAddress.postalCode || '',
+                    country: selectedAddress.country || '',
+                    contactName: selectedAddress.contactName || '',
+                    contactNumber: selectedAddress.contactNumber || ''
+                },
+
+                // Cart items
+                items: cartListDetails.map(item => ({
+                    productId: item.productId || item._id,
+                    quantity: item.quantity || 1,
+                    unitPrice: item.mrpPrice,
+                    attributes: item.attributes || {},
+                    offerId: item.offerId || null,
+                    offerType: item.offerType || 'no',
+                    discount: item.discount || 0,
+                    taxRate: item.taxRate || 0
+                })),
+
+                // Payment & pricing
+                totalAmount: totalPrice,
+                paymentMode: values.paymentMethod,
+                paymentStatus: 'pending',
+                deliveryCharge: 0,
+                discount: 0,
+
+                // Optional fields
+                orderType: type === 'buynow' ? 'instant' : 'cart',
+                paymentDetails: {
+                    method: values.paymentMethod,
+                    timestamp: new Date()
+                }
+            };
+
+            console.error("Sending order data:", orderData);
+
+            // ✅ Call backend API
+            const result = await CheckoutApiProvider.checkout(orderData);
+
+            console.log("Order response:", result);
+
+            if (result && result.status) {
+                toast.success("Order placed successfully!");
+
+                // Clear cart
+                setCartListDetails([]);
+                setTotalPrice(0);
+
+                // Redirect to success page or orders page
+                setTimeout(() => {
+                    navigate('/pageaccount?tab=orders');
+                }, 1500);
+            } else {
+                toast.error(result?.message || "Failed to place order");
             }
 
         } catch (error) {
-            console.error("Error fetching cart count:", error);
+            console.error("Order submission error:", error);
+            toast.error("An error occurred while placing the order");
         }
     };
-
-    const formSubmit = async (value) => {
-        console.log("val", value)
-        await getCurrencys()
-
-        try {
-            const input = {
-                firstName: value.firstName,
-                // lastName: value.lastName,
-                email: value.email,
-                phoneNo: value.phoneNo,
-                address1: value.address1,
-                // address2: value.address2,
-                // country: value.country,
-                // state: value.state,
-                country: value.country,
-                zipCode: value.zipCode,
-                paymentMethod: value.paymentMethod,
-                acceptTerms: value.acceptTerms,
-                courseId: type == 'buynow' ? [courseDetails] : cartListDetails,
-                amount: type == 'buynow' ? courseDetails : totalPrice,
-                aedPrice: type == 'buynow' ? courseDetails.price * 3.67 : totalPrice.price * 3.67,
-                type: type
-            }
-            const result = await CheckoutApiProvider.checkout(input)
-            console.log(result,"rrrrrrrrrrrrrrrr");
-            // return
-            
-            if (result && result.response) {
-                let url = result.response.data.paymentUrl
-                window.location.href = url
-                // navigate("/login")
-            }
-        } catch (error) { }
-    }
-
 
     useEffect(() => {
         window.scrollTo(0, 0)
     }, [])
 
-    console.log(currencys, "currencys");
-    console.log(transectionCurrecy, "transectionCurrecy");
-    // console.log(totalPrice, "totalPrice");
-
-
-
-
     return (
         <>
             <div>
-                <section className="Home-banner-3  text-white py-5 position-relative">
+                <section className="Home-banner-3 text-white  position-relative">
                     <div className="container d-flex flex-column flex-md-row align-items-center">
-                        <div className="col-md-12 text-center  home-header" >
-                            <div className="innerbanner-txt ">
-                                <h1 className="fw-bold text-center display-5  font-51">{translateSync('Checkout')}</h1>
-                                {/* <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="index.html" title="" itemprop="url">About</a></li>
-                                    <li class="breadcrumb-item active">Our Facilitators</li>
-                                </ol> */}
+                        <div className="col-md-12 text-center home-header">
+                            <div className="innerbanner-txt">
+                                <h1 className="fw-bold text-center color-white display-5 font-51">{translateSync('Checkout')}</h1>
                             </div>
-
                         </div>
-
                     </div>
                 </section>
 
                 <section className="py-5">
-                    <div className="checkout_area bg-color-white rbt-section-gap py-5">
+                    <div className="checkout_area bg-color-white py-5">
                         <div className="container">
                             <Formik
                                 enableReinitialize
                                 initialValues={{
-                                    firstName: userDetails.name || "",
-                                    email: userDetails.email || '',
-                                    phoneNo: userDetails.phoneNo || '',
-                                    address1: userDetails.address || '',
-                                    zipCode: userDetails.postalCode || '',
-                                    country: userDetails.country || '',
+                                    selectedAddress: selectedAddressId || '',
                                     paymentMethod: '',
                                     acceptTerms: false
                                 }}
@@ -355,328 +333,346 @@ Have a question about our cancellation or refund policy?
                                 {({ errors, touched, values, setFieldValue, handleChange, handleBlur, isValid, dirty }) => (
                                     <Form onSubmit={(e) => {
                                         e.preventDefault();
-                                        if (transectionCurrecy.currencyName === "AED") {
-                                            if (values.acceptTerms && isValid && dirty) {
-                                                formSubmit(values);
-                                            }
-                                        } else {
-                                            if (isValid && dirty) {
-                                                formSubmit(values);
-                                            }
-                                        }
                                     }}>
-                                        <div className="row g-5">
-                                            <div className="col-lg-7">
-                                                <div className="checkout-content-wrapper">
-                                                    <div id="billing-form">
-                                                        <h4 className="checkout-title">{translateSync('Billing Address')}</h4>
-                                                        <div className="row">
-                                                            <div className="col-md-12 col-12 mb-3">
-                                                                <input
-                                                                    name="firstName"
-                                                                    type="text"
-                                                                    className='form-control'
-                                                                    placeholder={translateSync("First Name")}
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    value={values.firstName}
-                                                                />
-                                                                {errors.firstName && touched.firstName && <div className="error_msg">{errors.firstName}</div>}
-                                                            </div>
+                                        <div className="row g-4">
+                                            {/* Left Side - Address (Wider) */}
+                                            <div className="col-lg-7 col-xl-8">
+                                                {/* Checkout Information Header */}
+                                                <div className="d-flex justify-content-between align-items-center mb-4">
+                                                    <h3 className="text-danger mb-0" style={{ fontSize: '24px', fontWeight: '600' }}>
+                                                        {translateSync('Checkout Information')}
+                                                    </h3>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-danger px-4 py-2"
+                                                        onClick={() => setShowAddressModal(true)}
+                                                        style={{
+                                                            borderRadius: '8px',
+                                                            fontWeight: '500',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {translateSync('Add New Address')}
+                                                    </button>
+                                                </div>
 
-                                                            <div className="col-md-6 col-12 mb-3">
-                                                                <input
-                                                                    name="email"
-                                                                    type="email"
-                                                                    className='form-control'
-                                                                    placeholder={translateSync("Email Address")}
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    value={userDetails.email}
-                                                                />
-                                                                {errors.email && touched.email && <div className="error_msg">{errors.email}</div>}
-                                                            </div>
+                                                {/* Select Delivery Address */}
+                                                <div className="mb-4">
+                                                    <h5 className="mb-3" style={{ fontSize: '20px', fontWeight: '600', color: '#2c3e50' }}>
+                                                        {translateSync('Select Delivery Address')}
+                                                    </h5>
 
-                                                            <div className="col-md-6 col-12 mb-3">
-                                                                <input
-                                                                    name="phoneNo"
-                                                                    type="text"
-                                                                    placeholder={translateSync("Phone number")}
-                                                                    className='form-control'
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    value={values.phoneNo}
-                                                                />
-                                                                {errors.phoneNo && touched.phoneNo && <div className="error_msg">{errors.phoneNo}</div>}
-                                                            </div>
-
-                                                            <div className="col-12 mb-3">
-                                                                <textarea
-                                                                    name="address1"
-                                                                    type="text"
-                                                                    placeholder={translateSync('Address')}
-                                                                    className='form-control'
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    value={values.address1}
-                                                                />
-                                                                {errors.address1 && touched.address1 && <div className="error_msg">{errors.address1}</div>}
-                                                            </div>
-
-                                                            <div className="col-md-12 col-12 mb-3">
-                                                                <select
-                                                                    className='form-control'
-                                                                    style={{ height: "50px" }}
-                                                                    name="country"
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    value={values.country}
-                                                                >
-                                                                    <option value="">{translateSync('Select a country')}</option>
-                                                                    {countryList.length > 0 ?
-                                                                        countryList.map((country, i) => (
-                                                                            <option key={i} value={country.isoCode}>
-                                                                                {country.name}
-                                                                            </option>
-                                                                        )) :
-                                                                        <option>{translateSync('No records')}</option>
-                                                                    }
-                                                                </select>
-                                                                {errors.country && touched.country && <div className="error_msg">{errors.country}</div>}
-                                                            </div>
+                                                    {errors.selectedAddress && touched.selectedAddress && (
+                                                        <div className="alert alert-danger py-2" role="alert">
+                                                            {errors.selectedAddress}
                                                         </div>
-                                                    </div>
+                                                    )}
+
+                                                    {addresses && addresses.length > 0 ? (
+                                                        <div className="addresses-list">
+                                                            {addresses.map((address) => (
+                                                                <div
+                                                                    key={address._id}
+                                                                    className={`address-card-new mb-3 ${values.selectedAddress === address._id ? 'selected' : ''
+                                                                        }`}
+                                                                    onClick={() => setFieldValue('selectedAddress', address._id)}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                >
+                                                                    <div className="d-flex align-items-start p-3">
+                                                                        <input
+                                                                            type="radio"
+                                                                            name="selectedAddress"
+                                                                            checked={values.selectedAddress === address._id}
+                                                                            onChange={() => setFieldValue('selectedAddress', address._id)}
+                                                                            className="me-3 mt-1"
+                                                                            style={{
+                                                                                width: '18px',
+                                                                                height: '18px',
+                                                                                accentColor: '#007bff'
+                                                                            }}
+                                                                        />
+                                                                        <div className="flex-grow-1">
+                                                                            <div className="mb-2">
+                                                                                <strong style={{ fontSize: '16px', color: '#2c3e50' }}>
+                                                                                    {address.contactName || 'N/A'}
+                                                                                </strong>
+                                                                                <span style={{ color: '#6c757d', marginLeft: '8px' }}>
+                                                                                    | {address.contactNumber || 'N/A'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="mb-1" style={{ color: '#495057', fontSize: '14px', lineHeight: '1.6' }}>
+                                                                                {address.addressLine || 'N/A'}
+                                                                            </p>
+                                                                            <p className="mb-0" style={{ color: '#6c757d', fontSize: '14px' }}>
+                                                                                {address.country || 'India'}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="alert alert-info">
+                                                            {translateSync('No saved addresses. Please add a new address.')}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div className="col-lg-5">
-                                                <div className="row pl--50 pl_md--0 pl_sm--0">
-                                                    <div className="col-12 mb--60">
-                                                        <h4 className="checkout-title">{translateSync('Cart Total')}</h4>
-                                                        <div className="checkout-cart-total">
-                                                            <h4>{translateSync('Course')} <span>{translateSync('Total')}</span></h4>
-
-                                                            {type == "addToCart" ? (
-                                                                <ul>
-                                                                    {cartListDetails && cartListDetails.length > 0 &&
-                                                                        cartListDetails.map((ival) => (
-                                                                            <li key={ival.id}>
-                                                                                {translateSync(ival.courseName)}<span>$ {ival.offerPrice ? (ival.offerPrice * 0.95) : ival.price ? (ival.price * 0.95) : '0'}</span>
-                                                                                <p>
-                                                                                    *{translateSync('VAT Included')}<span> {ival.price ? '5%' : '0'}</span>
-                                                                                </p>
-                                                                            </li>
-                                                                        ))
-                                                                    }
-                                                                </ul>
-                                                            ) : (
-                                                                <ul>
-                                                                    <li>
-                                                                        {translateSync(courseDetails.courseName)}
-                                                                        <span>$ {courseDetails.offerPrice ? (Number(courseDetails.offerPrice) * 0.95) : courseDetails.price ? (Number(courseDetails.price) * 0.95) : '0'}</span>
-                                                                        <p>
-                                                                            *{translateSync('VAT Included')}<span> {courseDetails.price ? '5%' : '0'}</span>
-                                                                        </p>
-                                                                    </li>
-                                                                </ul>
-                                                            )}
-
-                                                            {type == "addToCart" && (
-                                                                <div>
-                                                                    <p>{translateSync('Sub Total')} <span>$ {totalPrice ? totalPrice : 0} </span></p>
-                                                                    <h4 className="mt--30">{translateSync('Grand Total')} <span>$ {totalPrice ? totalPrice : 0} </span></h4>
-                                                                </div>
-                                                            )}
-
-                                                            {type == "buynow" && (
-                                                                <div>
-                                                                    <h4 className="mt--30">{translateSync('Grand Total')} <span>$ {courseDetails.offerPrice ? courseDetails
-                                                                        .offerPrice : courseDetails.price ? courseDetails.price : 0}</span></h4>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                            {/* Right Side - Payment Method & Order Summary (Narrower) */}
+                                            <div className="col-lg-5 col-xl-4">
+                                                {/* Payment Method */}
+                                                <div className="mb-4">
+                                                    <div className="d-flex flex-column align-items-center gap-2 mb-3">
+                                                        <h5 className="mb-0" style={{ fontSize: '18px', fontWeight: '600', color: '#2c3e50' }}>
+                                                            {translateSync('Payment Method')}
+                                                        </h5>
+                                                        <h4 className="mb-0" style={{ fontSize: '24px', fontWeight: '700', color: '#2c3e50' }}>
+                                                            {translateSync('Choose Payment')}
+                                                        </h4>
                                                     </div>
 
-                                                    <div className="col-12 mb-60">
-                                                        <h4 className="checkout-title">{translateSync('Payment Method')}</h4>
-                                                        <div className="checkout-payment-method">
-                                                            {errors.paymentMethod && touched.paymentMethod && (
-                                                                <div className="error_msg">{errors.paymentMethod}</div>
-                                                            )}
+                                                    {errors.paymentMethod && touched.paymentMethod && (
+                                                        <div className="alert alert-danger py-2" role="alert">
+                                                            {errors.paymentMethod}
+                                                        </div>
+                                                    )}
 
-                                                            <div className="single-method payment-input">
+                                                    <div className="payment-methods-new">
+                                                        {/* Cash on Delivery */}
+                                                        <div
+                                                            className={`payment-method-card-new mb-3 ${values.paymentMethod === "Cash on Delivery" ? 'selected' : ''
+                                                                }`}
+                                                            onClick={() => setFieldValue('paymentMethod', 'Cash on Delivery')}
+                                                        >
+                                                            <div className="d-flex align-items-center p-3">
                                                                 <input
                                                                     type="radio"
-                                                                    id="payment_check"
+                                                                    id="payment_cod"
                                                                     name="paymentMethod"
-                                                                    value="noMod"
+                                                                    value="Cash on Delivery"
+                                                                    checked={values.paymentMethod === "Cash on Delivery"}
                                                                     onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    checked={values.paymentMethod === "noMod"}
+                                                                    className="me-3"
+                                                                    style={{
+                                                                        width: '18px',
+                                                                        height: '18px',
+                                                                        accentColor: '#007bff'
+                                                                    }}
                                                                 />
-                                                                <label htmlFor="payment_check">
-                                                                    <h5>{translateSync('Credit card / Debit card')}</h5>
+                                                                <label htmlFor="payment_cod" className="mb-0" style={{
+                                                                    fontSize: '15px',
+                                                                    color: '#2c3e50',
+                                                                    cursor: 'pointer',
+                                                                    fontWeight: '500'
+                                                                }}>
+                                                                    {translateSync('Cash on delivery')}
                                                                 </label>
-                                                                <p>{translateSync('Please send a Check to Store name with Store Street, Store Town, Store State, Store Postcode, Store Country.')}</p>
                                                             </div>
+                                                        </div>
 
-                                                            {paymentMethods && paymentMethods.length > 0 &&
-                                                                paymentMethods.map((ival, index) => {
-                                                                    const inputId = `payment_${ival.methodName.toLowerCase().replace(/\s+/g, '_')}_${index}`;
-                                                                    return (
-                                                                        <div className="single-method payment-input" key={inputId}>
+                                                        {/* Credit/Debit Card */}
+                                                        <div
+                                                            className={`payment-method-card-new mb-3 ${values.paymentMethod === "Credit/Debit Card" ? 'selected' : ''
+                                                                }`}
+                                                            onClick={() => setFieldValue('paymentMethod', 'Credit/Debit Card')}
+                                                        >
+                                                            <div className="d-flex align-items-center p-3">
+                                                                <input
+                                                                    type="radio"
+                                                                    id="payment_card"
+                                                                    name="paymentMethod"
+                                                                    value="Credit/Debit Card"
+                                                                    checked={values.paymentMethod === "Credit/Debit Card"}
+                                                                    onChange={handleChange}
+                                                                    className="me-3"
+                                                                    style={{
+                                                                        width: '18px',
+                                                                        height: '18px',
+                                                                        accentColor: '#007bff'
+                                                                    }}
+                                                                />
+                                                                <label htmlFor="payment_card" className="mb-0" style={{
+                                                                    fontSize: '15px',
+                                                                    color: '#2c3e50',
+                                                                    cursor: 'pointer',
+                                                                    fontWeight: '500'
+                                                                }}>
+                                                                    {translateSync('Credit/Debit Card')}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Google Pay */}
+                                                        <div
+                                                            className={`payment-method-card-new mb-3 ${values.paymentMethod === "Google Pay" ? 'selected' : ''
+                                                                }`}
+                                                            onClick={() => setFieldValue('paymentMethod', 'Google Pay')}
+                                                        >
+                                                            <div className="d-flex align-items-center p-3">
+                                                                <input
+                                                                    type="radio"
+                                                                    id="payment_gpay"
+                                                                    name="paymentMethod"
+                                                                    value="Google Pay"
+                                                                    checked={values.paymentMethod === "Google Pay"}
+                                                                    onChange={handleChange}
+                                                                    className="me-3"
+                                                                    style={{
+                                                                        width: '18px',
+                                                                        height: '18px',
+                                                                        accentColor: '#007bff'
+                                                                    }}
+                                                                />
+                                                                <label htmlFor="payment_gpay" className="mb-0" style={{
+                                                                    fontSize: '15px',
+                                                                    color: '#2c3e50',
+                                                                    cursor: 'pointer',
+                                                                    fontWeight: '500'
+                                                                }}>
+                                                                    {translateSync('Google Pay')}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* PhonePe */}
+                                                        <div
+                                                            className={`payment-method-card-new mb-3 ${values.paymentMethod === "PhonePe" ? 'selected' : ''
+                                                                }`}
+                                                            onClick={() => setFieldValue('paymentMethod', 'PhonePe')}
+                                                        >
+                                                            <div className="d-flex align-items-center p-3">
+                                                                <input
+                                                                    type="radio"
+                                                                    id="payment_phonepe"
+                                                                    name="paymentMethod"
+                                                                    value="PhonePe"
+                                                                    checked={values.paymentMethod === "PhonePe"}
+                                                                    onChange={handleChange}
+                                                                    className="me-3"
+                                                                    style={{
+                                                                        width: '18px',
+                                                                        height: '18px',
+                                                                        accentColor: '#007bff'
+                                                                    }}
+                                                                />
+                                                                <label htmlFor="payment_phonepe" className="mb-0" style={{
+                                                                    fontSize: '15px',
+                                                                    color: '#2c3e50',
+                                                                    cursor: 'pointer',
+                                                                    fontWeight: '500'
+                                                                }}>
+                                                                    {translateSync('PhonePe')}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Dynamic Payment Methods from API */}
+                                                        {paymentMethods && paymentMethods.length > 0 &&
+                                                            paymentMethods.map((ival, index) => {
+                                                                const inputId = `payment_${ival.methodName.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+                                                                return (
+                                                                    <div
+                                                                        key={inputId}
+                                                                        className={`payment-method-card-new mb-3 ${values.paymentMethod === ival.methodName ? 'selected' : ''
+                                                                            }`}
+                                                                        onClick={() => setFieldValue('paymentMethod', ival.methodName)}
+                                                                    >
+                                                                        <div className="d-flex align-items-center p-3">
                                                                             <input
                                                                                 type="radio"
                                                                                 id={inputId}
                                                                                 name="paymentMethod"
                                                                                 value={ival.methodName}
-                                                                                onChange={() => setFieldValue('paymentMethod', ival.methodName)}
-                                                                                onBlur={handleBlur}
                                                                                 checked={values.paymentMethod === ival.methodName}
+                                                                                onChange={() => setFieldValue('paymentMethod', ival.methodName)}
+                                                                                className="me-3"
+                                                                                style={{
+                                                                                    width: '18px',
+                                                                                    height: '18px',
+                                                                                    accentColor: '#007bff'
+                                                                                }}
                                                                             />
-                                                                            <label htmlFor={inputId}>
+                                                                            <label htmlFor={inputId} className="mb-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
                                                                                 <img
                                                                                     src={IMAGE_URL + ival.methodImage}
                                                                                     alt={ival.methodName}
-                                                                                    style={{ width: "150px", border: "1px solid #1111110d", margin: "5px" }}
+                                                                                    style={{ height: "25px", marginRight: "8px" }}
                                                                                 />
+                                                                                <span style={{ fontSize: '15px', color: '#2c3e50', fontWeight: '500' }}>
+                                                                                    {translateSync(ival.methodName)}
+                                                                                </span>
                                                                             </label>
-                                                                            <p>{translateSync('Please send a Check to Store name with Store Street, Store Town, Store State, Store Postcode, Store Country.')}</p>
                                                                         </div>
-                                                                    );
-                                                                })
-                                                            }
+                                                                    </div>
+                                                                );
+                                                            })
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                {/* Order Summary */}
+                                                <div className="order-summary-new" style={{
+                                                    position: 'sticky',
+                                                    top: '20px'
+                                                }}>
+                                                    <h5 className="mb-3" style={{
+                                                        fontSize: '18px',
+                                                        fontWeight: '600',
+                                                        color: '#d32f2f'
+                                                    }}>
+                                                        {translateSync('Order Summary')}
+                                                    </h5>
+
+                                                    <div className="summary-content p-3" style={{
+                                                        backgroundColor: '#fff',
+                                                        border: '1px solid #dee2e6',
+                                                        borderRadius: '8px'
+                                                    }}>
+                                                        <div className="d-flex justify-content-between mb-2 pt-2">
+                                                            <span style={{ fontSize: '13px', color: '#6c757d' }}>
+                                                                {translateSync('Subtotal')}
+                                                            </span>
+                                                            <span style={{ fontSize: '13px', color: '#6c757d' }}>
+                                                                ₹ {totalPrice ? totalPrice : 0}
+                                                            </span>
                                                         </div>
 
-                                                        <div className="modal fade" id="paymentConfirmationModal" tabIndex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-                                                            <div className="modal-dialog">
-                                                                <div className="modal-content">
-                                                                    <div className="modal-header">
-                                                                        <h5 className="modal-title" id="paymentModalLabel">{translateSync('Confirm Your Payment')}</h5>
-                                                                        <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                    </div>
-                                                                    <div className="modal-body">
-                                                                        <div className="mb-3">
-                                                                            <p>{translateSync('Amount in USD:')} <strong>${type == 'buynow' ? courseDetails.offerPrice ? courseDetails.offerPrice : courseDetails.price : totalPrice}</strong></p>
-                                                                            <p>{translateSync('Amount in AED:')} <strong>AED {(type == 'buynow' ? courseDetails.offerPrice ? courseDetails.offerPrice : courseDetails.price * 3.675 : totalPrice * 3.675)}</strong> (1 USD = 3.675 AED)</p>
-                                                                        </div>
+                                                        <div className="d-flex justify-content-between pt-3 border-top" style={{ marginTop: '10px' }}>
+                                                            <span style={{ fontSize: '15px', fontWeight: '700', color: '#2c3e50' }}>
+                                                                {translateSync('Total')}
+                                                            </span>
+                                                            <span style={{ fontSize: '15px', fontWeight: '700', color: '#2c3e50' }}>
+                                                                ₹ {totalPrice ? totalPrice : 0}
+                                                            </span>
+                                                        </div>
 
-                                                                        <div className="form-check mb-3">
-                                                                            <input
-                                                                                className="form-check-input"
-                                                                                type="checkbox"
-                                                                                id="paymentConfirmationCheckbox"
-                                                                                checked={values.acceptTerms}
-                                                                                onChange={() => setFieldValue('acceptTerms', !values.acceptTerms)}
-                                                                            />
-                                                                            <label className="form-check-label" htmlFor="paymentConfirmationCheckbox">
-                                                                                {translateSync('I confirm that I want to proceed with this payment')}
-                                                                            </label>
-                                                                            {errors.acceptTerms && touched.acceptTerms && (
-                                                                                <div className="error_msg">{errors.acceptTerms}</div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="modal-footer">
-                                                                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">{translateSync('Cancel')}</button>
-                                                                        <button
-                                                                            type="submit"
-                                                                            className="btn btn-primary"
-                                                                            id="submitPaymentBtn"
-                                                                            disabled={!values.acceptTerms || !isValid || !dirty}
-                                                                        >
-                                                                            {translateSync('Submit Payment')}
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <br></br>
-                                                        {/* Policy Links - Updated Styling */}
-                                                        {/* <div className="policy-links-container mt-4">
-                                                            <div className="d-flex flex-wrap justify-content-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    className="policy-link-btn"
-                                                                    onClick={() => openPolicyModal('cancellation')}
-                                                                >
-                                                                    Cancellation & Refund Policy
-                                                                </button>
-                                                                <span className="policy-link-separator">|</span>
-                                                                <button
-                                                                    type="button"
-                                                                    className="policy-link-btn"
-                                                                    onClick={() => openPolicyModal('terms')}
-                                                                >
-                                                                    Terms & Conditions
-                                                                </button>
-                                                                <span className="policy-link-separator">|</span>
-                                                                <button
-                                                                    type="button"
-                                                                    className="policy-link-btn"
-                                                                    onClick={() => openPolicyModal('privacy')}
-                                                                >
-                                                                    Privacy Policy
-                                                                </button>
-                                                            </div>
-                                                        </div> */}
-                                                        {/* Policy Links */}
-                                                        <div className="policy-links mb-4 text-center">
-                                                            <button
-                                                                className="btn btn-link"
-                                                                onClick={() => openPolicyModal('cancellation')}
-                                                            >
-                                                                {translateSync('Cancellation & Refund Policy')}
-                                                            </button>
-                                                            <span className="mx-2">|</span>
-                                                            <button
-                                                                className="btn btn-link"
-                                                                onClick={() => openPolicyModal('terms')}
-                                                            >
-                                                                {translateSync('Terms & Conditions')}
-                                                            </button>
-                                                            <span className="mx-2">|</span>
-                                                            <button
-                                                                className="btn btn-link"
-                                                                onClick={() => openPolicyModal('privacy')}
-                                                            >
-                                                                {translateSync('Privacy Policy')}
-                                                            </button>
-                                                            <span className="mx-2">|</span>
-                                                            {/* <button
-                                                                className="btn btn-link"
-                                                                onClick={() => openPolicyModal('contact')}
-                                                            >
-                                                                Contact Us
-                                                            </button> */}
-                                                        </div>
-                                                        <br></br>
-                                                        <div className="plceholder-button mt--50">
-                                                            <button
-                                                                className="rbt-btn btn-gradient hover-icon-reverse"
-                                                                type="button"
-                                                                data-bs-toggle={transectionCurrecy?.currencyName === "AED" ? 'modal' : ''}
-                                                                data-bs-target={transectionCurrecy?.currencyName === "AED" ? '#paymentConfirmationModal' : ''}
-                                                                disabled={!isValid || !dirty}
-                                                                onClick={() => {
-                                                                    if (transectionCurrecy?.currencyName !== "AED") {
-                                                                        // Handle non-AED payment directly
-                                                                        if (isValid && dirty) {
-                                                                            formSubmit(values)
-                                                                            // document.querySelector('form').submit();
-                                                                        }
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-danger w-100 mt-4 py-2"
+                                                            onClick={() => {
+                                                                if (transectionCurrecy?.currencyName !== "AED") {
+                                                                    if (isValid && dirty) {
+                                                                        formSubmit(values)
                                                                     }
-                                                                }}
-                                                            >
-                                                                <span className="icon-reverse-wrapper">
-                                                                    <span className="btn-text">{translateSync('Proceed to Payment')}</span>
-                                                                </span>
-                                                            </button>
-                                                        </div>
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                borderRadius: '8px',
+                                                                fontSize: '15px',
+                                                                fontWeight: '600',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.5px'
+                                                            }}
+                                                        >
+                                                            {translateSync('Place Order')}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+
+
                                     </Form>
                                 )}
                             </Formik>
@@ -684,9 +680,7 @@ Have a question about our cancellation or refund policy?
                     </div>
                 </section>
 
-                {/* popup currency  */}
-
-                {/* Modal Component */}
+                {/* Policy Modal */}
                 <div className={`modal fade ${showModal ? 'show d-block' : 'd-none'}`} id="policyModal" tabIndex="-1">
                     <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                         <div className="modal-content">
@@ -727,10 +721,13 @@ Have a question about our cancellation or refund policy?
                     ></div>
                 )}
             </div>
-            {/* </div> */}
-
         </>
     )
 }
 
 export default CheckoutPage;
+
+
+
+
+

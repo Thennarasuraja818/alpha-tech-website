@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "../../context/TranslationContext";
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/authSlice';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import { Country, State, City } from 'country-state-city';
+
+import apiProvider from "../../apiProvider/api";
+
+const addressSchema = Yup.object().shape({
+    label: Yup.string().required('Label is required'),
+    name: Yup.string().required('Name is required'),
+    mobile: Yup.string().required('Mobile is required'),
+    streetAddress: Yup.string().required('Street Address is required'),
+    city: Yup.string().required('City is required'),
+    country: Yup.string().required('Country is required'),
+    state: Yup.string().required('State is required'),
+    postalCode: Yup.string().required('Postal Code is required'),
+});
 
 const PageAccount = () => {
     const { translateSync } = useTranslation();
@@ -15,11 +31,28 @@ const PageAccount = () => {
     const user = useSelector((state) => state.auth.user);
     const token = useSelector((state) => state.auth.token);
     const userName = user?.name || 'Thennarasu Raja';
-    console.error("userDetails", user)
-    console.error("token", token)
+    const [addresses, setAddresses] = useState([]);
+    const [searchParams] = useSearchParams();
+
+    useEffect(() => {
+        const tabParam = searchParams.get('tab');
+        if (tabParam) {
+            setActiveTab(tabParam);
+        }
+    }, [searchParams]);
+
+    // Address Modal State
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [editingAddress, setEditingAddress] = useState(null); // Add this
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [countries, setCountries] = useState(Country.getAllCountries());
+    console.error("countries", countries)
+    const [states, setStates] = useState([]);
+
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        fetchAddresses()
     }, []);
 
     const handleLogout = () => {
@@ -30,6 +63,131 @@ const PageAccount = () => {
             navigate("/login");
         }, 1500);
     };
+
+    const handleCloseAddressModal = () => {
+        setShowAddressModal(false);
+        setEditingAddress(null);
+        setIsEditMode(false);
+    };
+    const handleShowAddressModal = () => {
+        setIsEditMode(false);
+        setEditingAddress(null);
+        setShowAddressModal(true);
+    };
+
+    const handleEditAddress = (address) => {
+        setIsEditMode(true);
+        setEditingAddress(address);
+
+        // Set states based on country
+        const country = countries.find(c => c.name === address.country);
+        if (country) {
+            const countryStates = State.getStatesOfCountry(country.isoCode);
+            setStates(countryStates);
+        }
+
+        setShowAddressModal(true);
+    };
+
+    const handleDeleteAddress = async (addressId) => {
+        try {
+            const result = await apiProvider.deleteAddress(addressId);
+            if (result && result.status) {
+                toast.success("Address deleted successfully!");
+                fetchAddresses();
+            }
+        } catch (error) {
+            console.error("Error deleting address:", error);
+            toast.error("Failed to delete address");
+        }
+    };
+
+    const handleAddressSubmit = async (values, { resetForm }) => {
+        try {
+            // Get country name from isoCode
+            const selectedCountry = countries.find(c => c.isoCode === values.country);
+            const countryName = selectedCountry ? selectedCountry.name : '';
+
+            // Get state name from isoCode
+            const selectedState = states.find(s => s.isoCode === values.state);
+            const stateName = selectedState ? selectedState.name : '';
+
+
+            const payload = {
+                userId: user?._id || user?.id,
+                label: values.label.toUpperCase(), // WORK
+                contactName: values.name,
+                contactNumber: values.mobile.replace(/^0+/, ''), // remove leading 0
+                addressLine: values.streetAddress,
+                city: values.city,
+                state: stateName,        // ✅ Store state NAME instead of code
+                country: countryName,
+                postalCode: values.postalCode
+            };
+
+            const result = await apiProvider.addAddress(payload);
+            console.error("result :", result);
+            if (result && result.status) {
+                toast.success("Address added successfully!");
+                resetForm();
+                setShowAddressModal(false);
+                // Optionally refresh address list here
+            }
+            fetchAddresses();
+        } catch (error) {
+            console.error("Error adding address:", error);
+            //   toast.error("An error occurred.");
+        }
+    };
+
+    const handleAddressUpdate = async (values, { resetForm }) => {
+        try {
+            // Get country name from isoCode
+            const selectedCountry = countries.find(c => c.isoCode === values.country);
+            const countryName = selectedCountry ? selectedCountry.name : '';
+
+            // Get state name from isoCode
+            const selectedState = states.find(s => s.isoCode === values.state);
+            const stateName = selectedState ? selectedState.name : '';
+
+            const payload = {
+                userId: user?._id || user?.id,
+                label: values.label.toUpperCase(), // WORK
+                contactName: values.name,
+                contactNumber: values.mobile.replace(/^0+/, ''), // remove leading 0
+                addressLine: values.streetAddress,
+                city: values.city,
+                state: stateName,        // ✅ Store state NAME instead of code
+                country: countryName,
+                postalCode: values.postalCode
+            };
+
+            const result = await apiProvider.updateAddress(values.id, payload);
+            console.error("result :", result);
+            if (result && result.status) {
+                toast.success("Address updated successfully!");
+                resetForm();
+                setShowAddressModal(false);
+                // Optionally refresh address list here
+            }
+            fetchAddresses();
+        } catch (error) {
+            console.error("Error updating address:", error);
+            //   toast.error("An error occurred.");
+        }
+    };
+
+    const fetchAddresses = async () => {
+        try {
+            const result = await apiProvider.getAddress(user?._id, 'customer');
+            console.error("result :", result.response?.data);
+            if (result && result.status) {
+                setAddresses(result.response?.data);
+            }
+        } catch (error) {
+            console.error("Error fetching addresses:", error);
+        }
+    }
 
     // Dashboard Content
     const renderDashboard = () => (
@@ -228,48 +386,55 @@ const PageAccount = () => {
         <div className="address-content">
             <h3 className="fw-bold mb-4 pb-2 border-bottom">My Address</h3>
             <div className="row g-4">
-                <div className="col-md-6">
-                    <div className="bg-white p-4 rounded-3 shadow-sm h-100">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h5 className="fw-bold mb-0">
-                                <i className="bi bi-house-door me-2 text-primary"></i>
-                                Shipping Address
-                            </h5>
-                            <span className="badge bg-primary">Default</span>
+                {addresses.length === 0 ? (
+                    <p className="text-muted">No addresses found.</p>
+                ) : (
+                    addresses.map((address, index) => (
+                        <div className="col-md-6" key={address._id}>
+                            <div className="bg-white p-4 rounded-3 shadow-sm h-100">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 className="fw-bold mb-0">
+                                        <i className="bi bi-map me-2 text-primary"></i>
+                                        Address #{index + 1} ({address.label})
+                                    </h5>
+
+                                    {address.isDefault && (
+                                        <span className="badge bg-primary">Default</span>
+                                    )}
+                                </div>
+
+                                <p className="mb-1 fw-bold">{address.contactName}</p>
+                                <p className="mb-1 text-muted">{address.addressLine}</p>
+                                <p className="mb-1 text-muted">
+                                    {address.city}, {address.state} {address.postalCode}
+                                </p>
+                                <p className="mb-3 text-muted">{address.country}</p>
+
+                                <p className="mb-0">
+                                    <i className="bi bi-telephone me-2"></i>
+                                    +91 {address.contactNumber}
+                                </p>
+
+                                <div className="mt-3">
+                                    <button
+                                        className="btn btn-sm btn-outline-primary me-2"
+                                        onClick={() => handleEditAddress(address)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button className="btn btn-sm btn-outline-danger"
+                                        onClick={() => handleDeleteAddress(address._id)}>
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <p className="mb-1 fw-medium">Thennarasu Raja</p>
-                        <p className="mb-1 text-muted">123 Main Street, Apartment 4B</p>
-                        <p className="mb-1 text-muted">Chennai, Tamil Nadu 600001</p>
-                        <p className="mb-3 text-muted">India</p>
-                        <p className="mb-0"><i className="bi bi-telephone me-2"></i>+91 98765 43210</p>
-                        <div className="mt-3">
-                            <button className="btn btn-sm btn-outline-primary me-2">Edit</button>
-                            <button className="btn btn-sm btn-outline-danger">Remove</button>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-6">
-                    <div className="bg-white p-4 rounded-3 shadow-sm h-100">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h5 className="fw-bold mb-0">
-                                <i className="bi bi-building me-2 text-secondary"></i>
-                                Billing Address
-                            </h5>
-                        </div>
-                        <p className="mb-1 fw-medium">Thennarasu Raja</p>
-                        <p className="mb-1 text-muted">123 Main Street, Apartment 4B</p>
-                        <p className="mb-1 text-muted">Chennai, Tamil Nadu 600001</p>
-                        <p className="mb-3 text-muted">India</p>
-                        <p className="mb-0"><i className="bi bi-telephone me-2"></i>+91 98765 43210</p>
-                        <div className="mt-3">
-                            <button className="btn btn-sm btn-outline-primary me-2">Edit</button>
-                            <button className="btn btn-sm btn-outline-danger">Remove</button>
-                        </div>
-                    </div>
-                </div>
+                    ))
+                )}
             </div>
+
             <div className="mt-4">
-                <button className="btn btn-primary">
+                <button className="btn btn-primary" onClick={handleShowAddressModal}>
                     <i className="bi bi-plus-circle me-2"></i>
                     Add New Address
                 </button>
@@ -424,6 +589,159 @@ const PageAccount = () => {
                 </div>
             </section>
 
+            {/* Address Modal */}
+            {showAddressModal && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+                    <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '700px' }}>
+                        <div className="modal-content">
+                            <div className="modal-header border-bottom-0 pb-0">
+                                <h5 className="modal-title fw-bold">
+                                    {isEditMode ? 'Edit Address' : 'Add Address'}
+                                </h5>
+                                <button type="button" className="btn-close" onClick={handleCloseAddressModal}></button>
+                            </div>
+                            <div className="modal-body">
+                                <Formik
+                                    enableReinitialize
+                                    initialValues={{
+                                        id: editingAddress?._id || '',
+                                        label: editingAddress?.label || '',
+                                        name: editingAddress?.contactName || '',
+                                        mobile: editingAddress?.contactNumber || '',
+                                        streetAddress: editingAddress?.addressLine || '',
+                                        city: editingAddress?.city || '',
+                                        country: editingAddress?.country
+                                            ? countries.find(c => c.name === editingAddress.country)?.isoCode || ''
+                                            : '',
+                                        state: editingAddress?.state
+                                            ? states.find(s => s.name === editingAddress.state)?.isoCode || ''
+                                            : '',
+                                        postalCode: editingAddress?.postalCode || ''
+                                    }}
+                                    validationSchema={addressSchema}
+                                    onSubmit={isEditMode ? handleAddressUpdate : handleAddressSubmit}
+                                >
+                                    {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
+                                        <Form>
+                                            <div className="row g-3">
+                                                <Field type="hidden" name="id" />
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field
+                                                            as="select"
+                                                            name="label"
+                                                            className={`form-select ${touched.label && errors.label ? 'is-invalid' : ''}`}
+                                                        >
+                                                            <option value="">Select Label</option>
+                                                            <option value="Home">Home</option>
+                                                            <option value="Work">Work</option>
+                                                            <option value="Other">Other</option>
+                                                        </Field>
+
+                                                        <label>Select Label *</label>
+
+                                                        {touched.label && errors.label && (
+                                                            <div className="invalid-feedback">{errors.label}</div>
+                                                        )}
+                                                    </div>
+
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field name="name" className={`form-control ${touched.name && errors.name ? 'is-invalid' : ''}`} placeholder="Name" />
+                                                        <label>Name *</label>
+                                                        {touched.name && errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field name="mobile" className={`form-control ${touched.mobile && errors.mobile ? 'is-invalid' : ''}`} placeholder="Mobile" />
+                                                        <label>Mobile *</label>
+                                                        {touched.mobile && errors.mobile && <div className="invalid-feedback">{errors.mobile}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field name="streetAddress" className={`form-control ${touched.streetAddress && errors.streetAddress ? 'is-invalid' : ''}`} placeholder="Street Address" />
+                                                        <label>Street Address *</label>
+                                                        {touched.streetAddress && errors.streetAddress && <div className="invalid-feedback">{errors.streetAddress}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field name="city" className={`form-control ${touched.city && errors.city ? 'is-invalid' : ''}`} placeholder="City" />
+                                                        <label>City *</label>
+                                                        {touched.city && errors.city && <div className="invalid-feedback">{errors.city}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <select
+                                                            name="country"
+                                                            className={`form-select ${touched.country && errors.country ? 'is-invalid' : ''}`}
+                                                            onChange={(e) => {
+                                                                handleChange(e);
+                                                                const countryCode = e.target.value;
+                                                                setStates(State.getStatesOfCountry(countryCode));
+                                                                setFieldValue('state', ''); // Reset state when country changes
+                                                            }}
+                                                            onBlur={handleBlur}
+                                                            value={values.country}
+                                                        >
+                                                            <option value="">Select Country</option>
+                                                            {countries.map((country) => (
+                                                                <option key={country.isoCode} value={country.isoCode}>{country.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <label>Select Country *</label>
+                                                        {touched.country && errors.country && <div className="invalid-feedback">{errors.country}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <select
+                                                            name="state"
+                                                            className={`form-select ${touched.state && errors.state ? 'is-invalid' : ''}`}
+                                                            onChange={handleChange}
+                                                            onBlur={handleBlur}
+                                                            value={values.state}
+                                                            disabled={!values.country}
+                                                        >
+                                                            <option value="">Select State</option>
+                                                            {states.map((state) => (
+                                                                <option key={state.isoCode} value={state.isoCode}>{state.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <label>Select State *</label>
+                                                        {touched.state && errors.state && <div className="invalid-feedback">{errors.state}</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="form-floating">
+                                                        <Field name="postalCode" className={`form-control ${touched.postalCode && errors.postalCode ? 'is-invalid' : ''}`} placeholder="Postal Code" />
+                                                        <label>Postal Code *</label>
+                                                        {touched.postalCode && errors.postalCode && <div className="invalid-feedback">{errors.postalCode}</div>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4">
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-primary px-4 py-2 fw-medium"
+                                                    style={{ backgroundColor: 'var(--primary-color)', borderColor: 'var(--primary-color)' }}
+                                                >
+                                                    {isEditMode ? 'Update' : 'Submit'}
+                                                </button>
+                                            </div>
+                                        </Form>
+                                    )}
+                                </Formik>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <ToastContainer position="top-right" autoClose={2000} />
 
             <style jsx>{`
@@ -442,9 +760,13 @@ const PageAccount = () => {
                 }
                 .list-group-item:first-child {
                     border-top: none;
+                    border-left-width: 0;
+                     border-right-width: 0;
                 }
                 .list-group-item:last-child {
                     border-bottom: none;
+                     border-left-width: 0;
+                     border-right-width: 0;
                 }
                 .list-group-item:hover:not(.active) {
                     background-color: #f8f9fa;
@@ -478,6 +800,20 @@ const PageAccount = () => {
     font-size: 20px;
     color: var(--primary-color);
 }
+                
+                /* Modal Styles */
+                .modal.show {
+                    display: block;
+                    padding-right: 17px;
+                }
+                .form-floating > .form-control:focus,
+                .form-floating > .form-select:focus {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Adjust based on primary color */
+                }
+                 .form-floating > label {
+                    color: #6c757d;
+                }
             `}</style>
         </>
     );

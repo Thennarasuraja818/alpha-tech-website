@@ -10,7 +10,8 @@ const CartPage = () => {
     const [cartId, setCartId] = useState(null);
     const [apiCartData, setApiCartData] = useState({
         subtotal: 0,
-        total: 0
+        total: 0,
+        deliveryCharge: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -20,6 +21,11 @@ const CartPage = () => {
 
     const handleQuantityChange = async (productCartId, newQty) => {
         if (newQty >= 1) {
+            // Find the item to be updated
+            const itemToUpdate = cartItems.find(item => item.id === productCartId);
+
+            if (!itemToUpdate) return;
+
             // Update local state immediately for better UX
             setCartItems(prevItems =>
                 prevItems.map(item =>
@@ -27,18 +33,50 @@ const CartPage = () => {
                 )
             );
 
-            // Call API to update quantity on server
+            // Call API to update quantity on server using addToCart logic
             try {
                 const token = localStorage.getItem('userToken');
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const guestId = localStorage.getItem('guestUserId');
 
+                const price = Number(itemToUpdate.mrpPrice || 0);
+                const totalPrice = price * newQty;
+
+                let payload = {
+                    products: [
+                        {
+                            productId: itemToUpdate.productId,
+                            variantName: itemToUpdate.partNo,
+                            id: itemToUpdate.metricId || '',
+                            idTolerance: itemToUpdate.idTolerance || '',
+                            cs: itemToUpdate.cs || '',
+                            csTolerance: itemToUpdate.csTolerance || '',
+                            sku: itemToUpdate.sku || '',
+                            quantity: newQty,
+                            mrpPrice: price,
+                        }
+                    ],
+                    total: totalPrice,
+                    subtotal: totalPrice
+                };
+
                 if (token && user._id) {
-                    // Update cart on server
-                    await apiCart.updateCartQuantity(user._id, productCartId, newQty);
+                    payload.type = 'user';
+                    payload.userId = user._id;
+                    payload.userType = 'user';
                 } else if (guestId) {
-                    await apiCart.updateCartQuantity(guestId, productCartId, newQty);
+                    payload.type = 'guest';
+                    payload.guestUserId = guestId;
+                    payload.userType = 'guest';
                 }
+
+                await apiCart.addToCart(payload);
+
+                // Update global state for header count
+                dispatch(updateQuantity({
+                    id: productCartId,
+                    quantity: newQty // API call succeeded, so we can update global state
+                }));
 
                 // Refresh cart to get updated totals
                 await getCartDetails();
@@ -97,6 +135,13 @@ const CartPage = () => {
                     productId: product._id,
                     name: product.productName,
                     partNo: product.attributes?.variantName || 'N/A',
+                    // Map additional fields needed for addToCart payload
+                    metricId: product.attributes?.pid || product.pid || '',
+                    idTolerance: product.attributes?.idTolerance || product.idTolerance || '',
+                    cs: product.attributes?.cs || product.cs || '',
+                    csTolerance: product.attributes?.csTolerance || product.csTolerance || '',
+                    sku: product.attributes?.sku || product.sku || '',
+
                     totalAmount: product.totalAmount,
                     mrpPrice: product.mrpPrice,
                     quantity: product.quantity,
@@ -112,7 +157,8 @@ const CartPage = () => {
                 // Set cart summary data
                 setApiCartData({
                     subtotal: apiData.subtotal || 0,
-                    total: apiData.total || 0
+                    total: apiData.total || 0,
+                    deliveryCharge: apiData.deliveryCharge || 0
                 });
             } else {
                 setCartItems([]);
@@ -291,7 +337,7 @@ const CartPage = () => {
                                 <div className="d-flex justify-content-between pb-3 mb-3" style={{ borderBottom: '1px solid #e0e0e0' }}>
                                     <span style={{ fontSize: '15px', color: '#666' }}>Shipping</span>
                                     <span style={{ fontSize: '15px', color: apiCartData.deliveryCharge === 0 ? '#27ae60' : '#333', fontWeight: '500' }}>
-                                        {apiCartData.deliveryCharge === 0 ? 'Free' : `₹ ${apiCartData.deliveryCharge}`}
+                                        {apiCartData.deliveryCharge === 0 ? 'Free Delivery' : `₹ ${apiCartData.deliveryCharge}`}
                                     </span>
                                 </div>
 
