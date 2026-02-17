@@ -6,8 +6,6 @@ import HomePage from './pages/main/home';
 import FooterPage from './pages/footer/footer';
 import ProductListing from './pages/products/ProductListing';
 import CartPage from './pages/cart/CartPage';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import AboutPage from './pages/main/about';
 import TrainingDetailPage from './pages/main/training-detail';
 import ProgramPage from './pages/main/program';
@@ -91,7 +89,7 @@ function App() {
 
         <Route path='/verify/:token' element={<EmailVerify />} />
 
-        <Route exact path='/invoice' element={<CourseInvoice />} />
+        <Route exact path='/invoice/:id' element={<CourseInvoice />} />
 
         <Route exact path='/podcast' element={<Podcost />} />
 
@@ -107,7 +105,6 @@ function App() {
 
       </Routes>
       <FooterPage />
-      <ToastContainer position="top-right" autoClose={2000} />
       {/* Cookie consent removed */}
     </div>
   );

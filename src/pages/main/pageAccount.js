@@ -29,6 +29,7 @@ const PageAccount = () => {
     const dispatch = useDispatch();
     const [activeTab, setActiveTab] = useState('dashboard');
     const user = useSelector((state) => state.auth.user);
+    console.error("userr :", user);
     const token = useSelector((state) => state.auth.token);
     const userName = user?.name || 'Thennarasu Raja';
     const [addresses, setAddresses] = useState([]);
@@ -48,11 +49,14 @@ const PageAccount = () => {
     const [countries, setCountries] = useState(Country.getAllCountries());
     console.error("countries", countries)
     const [states, setStates] = useState([]);
+    const [orders, setOrders] = useState([]);
+
 
 
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchAddresses()
+        fetchOrders();
     }, []);
 
     const handleLogout = () => {
@@ -180,7 +184,7 @@ const PageAccount = () => {
     const fetchAddresses = async () => {
         try {
             const result = await apiProvider.getAddress(user?._id, 'customer');
-            console.error("result :", result.response?.data);
+
             if (result && result.status) {
                 setAddresses(result.response?.data);
             }
@@ -188,6 +192,14 @@ const PageAccount = () => {
             console.error("Error fetching addresses:", error);
         }
     }
+
+    const fetchOrders = async () => {
+        const result = await apiProvider.getOrders();
+        console.error("fetchOrders :", result.response);
+        if (result.status) {
+            setOrders(result.response?.data);
+        }
+    };
 
     // Dashboard Content
     const renderDashboard = () => (
@@ -267,50 +279,66 @@ const PageAccount = () => {
                             <th className="px-4 py-3">Order ID</th>
                             <th className="px-4 py-3">Date</th>
                             <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3">Payment</th>
                             <th className="px-4 py-3">Total</th>
                             <th className="px-4 py-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td className="px-4 py-3 fw-medium">#ORD-001</td>
-                            <td className="px-4 py-3 text-muted">Feb 10, 2026</td>
-                            <td className="px-4 py-3">
-                                <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
-                                    Delivered
-                                </span>
-                            </td>
-                            <td className="px-4 py-3 fw-medium">$125.00</td>
-                            <td className="px-4 py-3">
-                                <button className="btn btn-sm btn-outline-primary">View</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="px-4 py-3 fw-medium">#ORD-002</td>
-                            <td className="px-4 py-3 text-muted">Feb 08, 2026</td>
-                            <td className="px-4 py-3">
-                                <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">
-                                    Processing
-                                </span>
-                            </td>
-                            <td className="px-4 py-3 fw-medium">$89.50</td>
-                            <td className="px-4 py-3">
-                                <button className="btn btn-sm btn-outline-primary">View</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="px-4 py-3 fw-medium">#ORD-003</td>
-                            <td className="px-4 py-3 text-muted">Feb 05, 2026</td>
-                            <td className="px-4 py-3">
-                                <span className="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill">
-                                    Shipped
-                                </span>
-                            </td>
-                            <td className="px-4 py-3 fw-medium">$234.99</td>
-                            <td className="px-4 py-3">
-                                <button className="btn btn-sm btn-outline-primary">Track</button>
-                            </td>
-                        </tr>
+                        {orders && orders.length > 0 ? (
+                            orders.map((order) => (
+                                <tr key={order._id}>
+                                    <td className="px-4 py-3 fw-medium">#{order.orderCode}</td>
+                                    <td className="px-4 py-3 text-muted">
+                                        {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={`badge ${order.status === 'delivered' ? 'bg-success' :
+                                            order.status === 'pending' ? 'bg-warning' :
+                                                order.status === 'cancelled' ? 'bg-danger' :
+                                                    'bg-primary'
+                                            } bg-opacity-10 ${order.status === 'delivered' ? 'text-success' :
+                                                order.status === 'pending' ? 'text-warning' :
+                                                    order.status === 'cancelled' ? 'text-danger' :
+                                                        'text-primary'
+                                            } px-3 py-2 rounded-pill text-capitalize`}>
+                                            {order.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-muted">
+                                        <small>{order.paymentMode}</small>
+                                        <div style={{ fontSize: '10px' }}>
+                                            {order.paymentStatus === 'pending' ?
+                                                <span className="text-warning">● Pending</span> :
+                                                <span className="text-success">● Paid</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 fw-medium">₹{order.totalAmount}</td>
+                                    <td className="px-4 py-3">
+                                        <button
+                                            className="btn btn-sm btn-outline-primary"
+                                            onClick={() => navigate(`/invoice/${order._id}`)}
+                                        >
+                                            View
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="6" className="text-center py-5">
+                                    <div className="text-muted">
+                                        <i className="bi bi-box-seam fs-1 d-block mb-3 opacity-25"></i>
+                                        No orders found yet.
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -509,7 +537,7 @@ const PageAccount = () => {
                                         </div>
                                         <div>
                                             <h6 className="fw-bold mb-1">{userName}</h6>
-                                            <small className="text-muted">Member since Jan 2026</small>
+                                            <small className="text-muted">{user?.email}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -742,7 +770,6 @@ const PageAccount = () => {
                 </div>
             )}
 
-            <ToastContainer position="top-right" autoClose={2000} />
 
             <style jsx>{`
                 .min-vh-75 {

@@ -222,6 +222,33 @@ class ApiProvider {
       return null;
     }
   }
+  async getOrders() {
+    try {
+
+      const response = await apiClient.get('orders');
+
+      if (response.status === 200 || response.status === 201) {
+        return { status: response.status, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async orderDetails(id) {
+    try {
+      const response = await apiClient.get(`orders/${id}`);
+      if (response.status === 200 || response.status === 201) {
+        return { status: response.status, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
 
   async updateAddress(UserAddressId, input) {
     try {

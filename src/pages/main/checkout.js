@@ -17,11 +17,101 @@ import apiProvider from "../../apiProvider/api";
 import apiCart from "../../apiProvider/addToCartApi";
 import { toast } from "react-toastify";
 
+const radioStyles = `
+  .payment-radio-native {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+  }
+  .custom-radio-circle {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #c5cdd8;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-right: 12px;
+    cursor: pointer;
+  }
+  .custom-radio-circle.active {
+    border-color: #007bff;
+    background: #007bff;
+  }
+  .custom-radio-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    transform: scale(0);
+    opacity: 0;
+  }
+  .custom-radio-circle.active .custom-radio-dot {
+    transform: scale(1);
+    opacity: 1;
+  }
+`;
+
+const CustomRadio = ({ id, name, value, checked, onChange }) => (
+    <div style={{ display: 'inline-flex', position: 'relative', alignItems: 'center' }}>
+        <input
+            type="radio"
+            id={id}
+            name={name}
+            value={value}
+            checked={checked}
+            onChange={onChange}
+            style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+        />
+        <div style={{
+            flexShrink: 0,
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            border: checked ? '2px solid #007bff' : '2px solid #c5cdd8',
+            background: checked ? '#007bff' : '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: '12px',
+            transition: 'all 0.2s ease'
+        }}>
+            <div style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: '#fff',
+                transform: checked ? 'scale(1)' : 'scale(0)',
+                transition: 'transform 0.15s ease'
+            }} />
+        </div>
+    </div>
+);
 const countryList = Country.getAllCountries();
 
 const CheckoutSchema = Yup.object().shape({
     selectedAddress: Yup.string().required('Please select a delivery address'),
     paymentMethod: Yup.string().required("Please select a payment method"),
+});
+
+const addressSchema = Yup.object().shape({
+    label: Yup.string().required('Label is required'),
+    name: Yup.string().required('Name is required'),
+    mobile: Yup.string().required('Mobile is required'),
+    streetAddress: Yup.string().required('Street Address is required'),
+    city: Yup.string().required('City is required'),
+    country: Yup.string().required('Country is required'),
+    state: Yup.string().required('State is required'),
+    postalCode: Yup.string().required('Postal Code is required'),
 });
 
 const CheckoutPage = () => {
@@ -41,6 +131,8 @@ const CheckoutPage = () => {
     const [addresses, setAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [showAddressModal, setShowAddressModal] = useState(false);
+    const [countries, setCountries] = useState(Country.getAllCountries());
+    const [states, setStates] = useState([]);
 
     const [cartListDetails, setCartListDetails] = useState([])
     const [totalPrice, setTotalPrice] = useState(0)
@@ -49,130 +141,6 @@ const CheckoutPage = () => {
     const [modalTitle, setModalTitle] = useState("");
     const [modalContent, setModalContent] = useState("");
 
-    const policies = {
-        cancellation: {
-            title: "Cancellation & Refund Policy",
-            content: `Last Updated: [Insert Date]
-Welcome to iLap Training Academy, your trusted partner in professional training and
-development across the UAE, KSA, and the wider MENA region. We value your learning
-journey and aim to provide a transparent experience through clear cancellation, refund, and
-terms of service guidelines.
-
-Course Cancellation Policy
-We understand that schedules change. That's why our training program cancellation policy
-is designed with flexibility:
-
-For Individual Participants:
-- Cancel 7+ days before course start: Full refund or free course transfer
-- Cancel 3–6 days before: 50% refund
-- Cancel <3 days before: No refund
-
-For Corporate Training & Group Bookings:
-- Cancel with 14+ days' notice: Full refund
-- Rescheduling accepted with 7+ days' notice, based on availability
-
-Refund Policy for Professional Training Courses
-Our refund policy is fair, fast, and clear:
-- Refunds processed within 10–15 business days
-- Refunds issued to the original payment method
-- No refunds for:
- - No-show attendees
- - Partially attended sessions
- - Courses where more than 25% was completed
-
-If we cancel a course, learners will receive a full refund or may choose to reschedule at no
-cost.
-
-Course Transfer Policy
-Need to switch courses?
-- Request a transfer 5+ days before your training start date
-- Transfer allowed to any available course of equal or lesser value
-- Only one free transfer per booking is permitted`
-        },
-        terms: {
-            title: "Terms & Conditions",
-            content: `iLap Terms & Conditions for Learners
-1. Intellectual Property
-All learning materials are copyrighted and are the intellectual property of iLap Training
-Academy. Unauthorized sharing or reproduction is strictly prohibited.
-
-2. Learner Code of Conduct
-To maintain a high-quality learning environment, all learners are expected to:
-- Attend sessions punctually and actively participate
-- Respect trainers and fellow participants
-- Maintain professional behavior during all interactions
-
-3. Certification Eligibility
-To receive a Certificate of Completion, participants must:
-- Attend at least 80% of the course duration
-- Complete all required assignments or assessments
-
-4. Program Schedule & Instructor Changes
-iLap Training Academy reserves the right to:
-- Update course schedules, delivery formats, or locations
-- Replace instructors with equally qualified professionals
-- Cancel underbooked sessions with full refunds or alternative options
-
-5. Data Privacy
-We are committed to protecting your data. All personal information will be used strictly for
-course communication, enrollment, and certification purposes in compliance with data
-privacy laws in the UAE and GCC.`
-        },
-        privacy: {
-            title: "Privacy Policy",
-            content: `Privacy & Cookies Policy
-At iLap Training Academy, we are committed to safeguarding your privacy. We collect, use,
-and protect your personal data in accordance with data protection laws applicable in the
-UAE, KSA, and the wider MENA region.
-
-By using our website and services, you agree to the collection and use of your information in
-accordance with this policy.
-
-1. What Information We Collect
-We may collect the following types of data:
-- Personal identification information (Name, email address, phone number, etc.)
-- Course registration details
-- Payment and transaction history
-- Browser cookies and usage data
-
-2. How We Use Your Information
-Your information helps us to:
-- Register and manage your course enrollment
-- Provide customer support and respond to inquiries
-- Improve our content and services
-- Send important updates, promotional materials, and feedback requests (only with your
-consent)
-
-3. Cookies Policy
-Our website uses cookies to enhance user experience. Cookies are small data files stored on
-your device to remember preferences and track usage. You can choose to disable cookies
-through your browser settings, although this may affect the functionality of the site.
-
-4. Data Security
-We implement industry-standard security measures to protect your data against
-unauthorized access, alteration, or disclosure.
-
-5. Third-Party Disclosure
-We do not sell or share your personal data with third parties, except as required to provide
-our services or comply with legal obligations.
-
-6. Your Rights
-You have the right to:
-- Access your data
-- Request corrections
-- Withdraw consent or request data deletion
-To exercise these rights, contact us at info@ilap.me.`
-        },
-        contact: {
-            title: "Contact Information",
-            content: `Contact iLap Training Academy
-Have a question about our cancellation or refund policy?
-- Email: info@ilap.me
-- Phone: +971 4 88 35 988 | +971 50 255 0228
-- Head Office: Dubai, UAE
-- Business Hours: Sunday – Thursday | 9:00 AM – 5:00 PM GST`
-        }
-    };
 
     const getCartDetails = async () => {
         const token = localStorage.getItem('userToken');
@@ -206,15 +174,52 @@ Have a question about our cancellation or refund policy?
             console.error("result :", result.response?.data);
             if (result && result.status) {
                 setAddresses(result.response?.data);
-            }
 
-            if (result.response.data.length > 0) {
-                setSelectedAddressId(result.response.data[0]._id);
+                // If nothing selected yet, select the first one
+                if (!selectedAddressId && result.response.data.length > 0) {
+                    setSelectedAddressId(result.response.data[0]._id);
+                }
             }
         } catch (error) {
             console.error("Error fetching addresses:", error);
         }
     }
+
+    const handleCloseAddressModal = () => {
+        setShowAddressModal(false);
+    };
+
+    const handleAddressSubmit = async (values, { resetForm }) => {
+        try {
+            const selectedCountry = countries.find(c => c.isoCode === values.country);
+            const countryName = selectedCountry ? selectedCountry.name : '';
+            const selectedState = states.find(s => s.isoCode === values.state);
+            const stateName = selectedState ? selectedState.name : '';
+
+            const payload = {
+                userId: user?._id || user?.id,
+                label: values.label.toUpperCase(),
+                contactName: values.name,
+                contactNumber: values.mobile.replace(/^0+/, ''),
+                addressLine: values.streetAddress,
+                city: values.city,
+                state: stateName,
+                country: countryName,
+                postalCode: values.postalCode
+            };
+
+            const result = await apiProvider.addAddress(payload);
+            if (result && result.status) {
+                toast.success("Address added successfully!");
+                resetForm();
+                setShowAddressModal(false);
+                fetchAddresses(); // Refresh list
+            }
+        } catch (error) {
+            console.error("Error adding address:", error);
+            toast.error("Failed to add address");
+        }
+    };
 
     const formSubmit = async (values) => {
         console.error("Submitting order:", values);
@@ -275,8 +280,6 @@ Have a question about our cancellation or refund policy?
             // ✅ Call backend API
             const result = await CheckoutApiProvider.checkout(orderData);
 
-            console.log("Order response:", result);
-
             if (result && result.status) {
                 toast.success("Order placed successfully!");
 
@@ -304,6 +307,7 @@ Have a question about our cancellation or refund policy?
 
     return (
         <>
+            <style>{radioStyles}</style>
             <div>
                 <section className="Home-banner-3 text-white  position-relative">
                     <div className="container d-flex flex-column flex-md-row align-items-center">
@@ -373,38 +377,65 @@ Have a question about our cancellation or refund policy?
                                                             {addresses.map((address) => (
                                                                 <div
                                                                     key={address._id}
-                                                                    className={`address-card-new mb-3 ${values.selectedAddress === address._id ? 'selected' : ''
-                                                                        }`}
                                                                     onClick={() => setFieldValue('selectedAddress', address._id)}
-                                                                    style={{ cursor: 'pointer' }}
+                                                                    style={{
+                                                                        cursor: 'pointer',
+                                                                        marginBottom: '12px',
+                                                                        borderRadius: '12px',
+                                                                        border: values.selectedAddress === address._id
+                                                                            ? '2px solid #007bff'
+                                                                            : '2px solid #e8ecf0',
+                                                                        background: values.selectedAddress === address._id
+                                                                            ? '#f0f7ff'
+                                                                            : '#ffffff',
+                                                                        boxShadow: values.selectedAddress === address._id
+                                                                            ? '0 2px 12px rgba(0,123,255,0.12)'
+                                                                            : '0 1px 4px rgba(0,0,0,0.05)',
+                                                                        transition: 'all 0.2s ease'
+                                                                    }}
                                                                 >
-                                                                    <div className="d-flex align-items-start p-3">
-                                                                        <input
-                                                                            type="radio"
+                                                                    <div style={{ display: 'flex', alignItems: 'flex-start', padding: '16px' }}>
+                                                                        <CustomRadio
+                                                                            id={`address_${address._id}`}
                                                                             name="selectedAddress"
+                                                                            value={address._id}
                                                                             checked={values.selectedAddress === address._id}
                                                                             onChange={() => setFieldValue('selectedAddress', address._id)}
-                                                                            className="me-3 mt-1"
-                                                                            style={{
-                                                                                width: '18px',
-                                                                                height: '18px',
-                                                                                accentColor: '#007bff'
-                                                                            }}
                                                                         />
-                                                                        <div className="flex-grow-1">
-                                                                            <div className="mb-2">
-                                                                                <strong style={{ fontSize: '16px', color: '#2c3e50' }}>
+                                                                        <div style={{ flex: 1 }}>
+                                                                            {/* Label badge */}
+                                                                            {address.label && (
+                                                                                <span style={{
+                                                                                    display: 'inline-block',
+                                                                                    fontSize: '11px',
+                                                                                    fontWeight: '600',
+                                                                                    color: '#007bff',
+                                                                                    background: '#e8f0fe',
+                                                                                    borderRadius: '4px',
+                                                                                    padding: '2px 8px',
+                                                                                    marginBottom: '6px',
+                                                                                    letterSpacing: '0.5px'
+                                                                                }}>
+                                                                                    {address.label}
+                                                                                </span>
+                                                                            )}
+                                                                            {/* Name & Phone */}
+                                                                            <div style={{ marginBottom: '4px' }}>
+                                                                                <strong style={{ fontSize: '15px', color: '#2c3e50' }}>
                                                                                     {address.contactName || 'N/A'}
                                                                                 </strong>
-                                                                                <span style={{ color: '#6c757d', marginLeft: '8px' }}>
-                                                                                    | {address.contactNumber || 'N/A'}
+                                                                                <span style={{ color: '#6c757d', marginLeft: '8px', fontSize: '14px' }}>
+                                                                                    {address.contactNumber || ''}
                                                                                 </span>
                                                                             </div>
-                                                                            <p className="mb-1" style={{ color: '#495057', fontSize: '14px', lineHeight: '1.6' }}>
+                                                                            {/* Address line */}
+                                                                            <p style={{ margin: '0 0 2px', color: '#495057', fontSize: '13px', lineHeight: '1.5' }}>
                                                                                 {address.addressLine || 'N/A'}
                                                                             </p>
-                                                                            <p className="mb-0" style={{ color: '#6c757d', fontSize: '14px' }}>
-                                                                                {address.country || 'India'}
+                                                                            {/* City, State, Country */}
+                                                                            <p style={{ margin: 0, color: '#6c757d', fontSize: '13px' }}>
+                                                                                {[address.city, address.state, address.country].filter(Boolean).join(', ')}
+                                                                                {address.postalCode ? ` - ${address.postalCode}` : ''}
                                                                             </p>
                                                                         </div>
                                                                     </div>
@@ -446,7 +477,7 @@ Have a question about our cancellation or refund policy?
                                                             onClick={() => setFieldValue('paymentMethod', 'Cash on Delivery')}
                                                         >
                                                             <div className="d-flex align-items-center p-3">
-                                                                <input
+                                                                {/* <input
                                                                     type="radio"
                                                                     id="payment_cod"
                                                                     name="paymentMethod"
@@ -459,6 +490,13 @@ Have a question about our cancellation or refund policy?
                                                                         height: '18px',
                                                                         accentColor: '#007bff'
                                                                     }}
+                                                                /> */}
+                                                                <CustomRadio
+                                                                    id="payment_cod"
+                                                                    name="paymentMethod"
+                                                                    value="Cash on Delivery"
+                                                                    checked={values.paymentMethod === "Cash on Delivery"}
+                                                                    onChange={() => setFieldValue('paymentMethod', 'Cash on Delivery')}
                                                                 />
                                                                 <label htmlFor="payment_cod" className="mb-0" style={{
                                                                     fontSize: '15px',
@@ -478,19 +516,12 @@ Have a question about our cancellation or refund policy?
                                                             onClick={() => setFieldValue('paymentMethod', 'Credit/Debit Card')}
                                                         >
                                                             <div className="d-flex align-items-center p-3">
-                                                                <input
-                                                                    type="radio"
+                                                                <CustomRadio
                                                                     id="payment_card"
                                                                     name="paymentMethod"
                                                                     value="Credit/Debit Card"
                                                                     checked={values.paymentMethod === "Credit/Debit Card"}
-                                                                    onChange={handleChange}
-                                                                    className="me-3"
-                                                                    style={{
-                                                                        width: '18px',
-                                                                        height: '18px',
-                                                                        accentColor: '#007bff'
-                                                                    }}
+                                                                    onChange={() => setFieldValue('paymentMethod', 'Credit/Debit Card')}
                                                                 />
                                                                 <label htmlFor="payment_card" className="mb-0" style={{
                                                                     fontSize: '15px',
@@ -510,19 +541,12 @@ Have a question about our cancellation or refund policy?
                                                             onClick={() => setFieldValue('paymentMethod', 'Google Pay')}
                                                         >
                                                             <div className="d-flex align-items-center p-3">
-                                                                <input
-                                                                    type="radio"
+                                                                <CustomRadio
                                                                     id="payment_gpay"
                                                                     name="paymentMethod"
                                                                     value="Google Pay"
                                                                     checked={values.paymentMethod === "Google Pay"}
-                                                                    onChange={handleChange}
-                                                                    className="me-3"
-                                                                    style={{
-                                                                        width: '18px',
-                                                                        height: '18px',
-                                                                        accentColor: '#007bff'
-                                                                    }}
+                                                                    onChange={() => setFieldValue('paymentMethod', 'Google Pay')}
                                                                 />
                                                                 <label htmlFor="payment_gpay" className="mb-0" style={{
                                                                     fontSize: '15px',
@@ -542,19 +566,12 @@ Have a question about our cancellation or refund policy?
                                                             onClick={() => setFieldValue('paymentMethod', 'PhonePe')}
                                                         >
                                                             <div className="d-flex align-items-center p-3">
-                                                                <input
-                                                                    type="radio"
+                                                                <CustomRadio
                                                                     id="payment_phonepe"
                                                                     name="paymentMethod"
                                                                     value="PhonePe"
                                                                     checked={values.paymentMethod === "PhonePe"}
-                                                                    onChange={handleChange}
-                                                                    className="me-3"
-                                                                    style={{
-                                                                        width: '18px',
-                                                                        height: '18px',
-                                                                        accentColor: '#007bff'
-                                                                    }}
+                                                                    onChange={() => setFieldValue('paymentMethod', 'PhonePe')}
                                                                 />
                                                                 <label htmlFor="payment_phonepe" className="mb-0" style={{
                                                                     fontSize: '15px',
@@ -579,19 +596,12 @@ Have a question about our cancellation or refund policy?
                                                                         onClick={() => setFieldValue('paymentMethod', ival.methodName)}
                                                                     >
                                                                         <div className="d-flex align-items-center p-3">
-                                                                            <input
-                                                                                type="radio"
+                                                                            <CustomRadio
                                                                                 id={inputId}
                                                                                 name="paymentMethod"
                                                                                 value={ival.methodName}
                                                                                 checked={values.paymentMethod === ival.methodName}
                                                                                 onChange={() => setFieldValue('paymentMethod', ival.methodName)}
-                                                                                className="me-3"
-                                                                                style={{
-                                                                                    width: '18px',
-                                                                                    height: '18px',
-                                                                                    accentColor: '#007bff'
-                                                                                }}
                                                                             />
                                                                             <label htmlFor={inputId} className="mb-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
                                                                                 <img
@@ -719,6 +729,146 @@ Have a question about our cancellation or refund policy?
                         className="modal-backdrop fade show"
                         onClick={() => setShowModal(false)}
                     ></div>
+                )}
+
+                {/* Add Address Modal */}
+                {showAddressModal && (
+                    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} tabIndex="-1">
+                        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '700px' }}>
+                            <div className="modal-content">
+                                <div className="modal-header border-bottom-0 pb-0">
+                                    <h5 className="modal-title fw-bold">Add New Address</h5>
+                                    <button type="button" className="btn-close" onClick={handleCloseAddressModal}></button>
+                                </div>
+                                <div className="modal-body">
+                                    <Formik
+                                        initialValues={{
+                                            label: '',
+                                            name: '',
+                                            mobile: '',
+                                            streetAddress: '',
+                                            city: '',
+                                            country: '',
+                                            state: '',
+                                            postalCode: ''
+                                        }}
+                                        validationSchema={addressSchema}
+                                        onSubmit={handleAddressSubmit}
+                                    >
+                                        {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
+                                            <Form>
+                                                <div className="row g-3">
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field
+                                                                as="select"
+                                                                name="label"
+                                                                className={`form-select ${touched.label && errors.label ? 'is-invalid' : ''}`}
+                                                            >
+                                                                <option value="">Select Label</option>
+                                                                <option value="Home">Home</option>
+                                                                <option value="Work">Work</option>
+                                                                <option value="Other">Other</option>
+                                                            </Field>
+                                                            <label>Select Label *</label>
+                                                            {touched.label && errors.label && (
+                                                                <div className="invalid-feedback">{errors.label}</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field name="name" className={`form-control ${touched.name && errors.name ? 'is-invalid' : ''}`} placeholder="Name" />
+                                                            <label>Name *</label>
+                                                            {touched.name && errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field name="mobile" className={`form-control ${touched.mobile && errors.mobile ? 'is-invalid' : ''}`} placeholder="Mobile" />
+                                                            <label>Mobile *</label>
+                                                            {touched.mobile && errors.mobile && <div className="invalid-feedback">{errors.mobile}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field name="streetAddress" className={`form-control ${touched.streetAddress && errors.streetAddress ? 'is-invalid' : ''}`} placeholder="Street Address" />
+                                                            <label>Street Address *</label>
+                                                            {touched.streetAddress && errors.streetAddress && <div className="invalid-feedback">{errors.streetAddress}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field name="city" className={`form-control ${touched.city && errors.city ? 'is-invalid' : ''}`} placeholder="City" />
+                                                            <label>City *</label>
+                                                            {touched.city && errors.city && <div className="invalid-feedback">{errors.city}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <select
+                                                                name="country"
+                                                                className={`form-select ${touched.country && errors.country ? 'is-invalid' : ''}`}
+                                                                onChange={(e) => {
+                                                                    handleChange(e);
+                                                                    const countryCode = e.target.value;
+                                                                    setStates(State.getStatesOfCountry(countryCode));
+                                                                    setFieldValue('state', '');
+                                                                }}
+                                                                onBlur={handleBlur}
+                                                                value={values.country}
+                                                            >
+                                                                <option value="">Select Country</option>
+                                                                {countries.map((country) => (
+                                                                    <option key={country.isoCode} value={country.isoCode}>{country.name}</option>
+                                                                ))}
+                                                            </select>
+                                                            <label>Select Country *</label>
+                                                            {touched.country && errors.country && <div className="invalid-feedback">{errors.country}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <select
+                                                                name="state"
+                                                                className={`form-select ${touched.state && errors.state ? 'is-invalid' : ''}`}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                value={values.state}
+                                                                disabled={!values.country}
+                                                            >
+                                                                <option value="">Select State</option>
+                                                                {states.map((state) => (
+                                                                    <option key={state.isoCode} value={state.isoCode}>{state.name}</option>
+                                                                ))}
+                                                            </select>
+                                                            <label>Select State *</label>
+                                                            {touched.state && errors.state && <div className="invalid-feedback">{errors.state}</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-floating">
+                                                            <Field name="postalCode" className={`form-control ${touched.postalCode && errors.postalCode ? 'is-invalid' : ''}`} placeholder="Postal Code" />
+                                                            <label>Postal Code *</label>
+                                                            {touched.postalCode && errors.postalCode && <div className="invalid-feedback">{errors.postalCode}</div>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4">
+                                                    <button
+                                                        type="submit"
+                                                        className="btn btn-danger px-4 py-2 fw-medium"
+                                                    >
+                                                        Submit
+                                                    </button>
+                                                </div>
+                                            </Form>
+                                        )}
+                                    </Formik>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </>

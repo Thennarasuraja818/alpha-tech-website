@@ -168,10 +168,10 @@ const ProductSpecs = () => {
 
         try {
             const result = await apiCart.addToCart(payload);
-            if (result && result.status && result.response) {
-                // 1. Optimistic Update (Optional: keeping it for immediate feedback)
-                // dispatch(addToCart({ ... })); 
+            if (result && result.status) {
 
+                console.log("Toast success triggered in ProductSpecs.js");
+                toast.success(`Added ${qty} x ${item.partNo} to cart!`);
                 // 2. Fetch Helper: Logic to get accurate count from server
                 const fetchUpdatedCount = async () => {
                     let countResult;
@@ -188,9 +188,7 @@ const ProductSpecs = () => {
 
                 await fetchUpdatedCount();
 
-                toast.success(`Added ${qty} x ${item.partNo} to cart!`, {
-                    style: { boxShadow: 'none', border: '1px solid #e2e8f0' }
-                });
+
             } else {
                 toast.error(result?.response || 'Failed to add to cart');
             }
@@ -200,13 +198,13 @@ const ProductSpecs = () => {
         }
     };
 
-    if (loading) return (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', marginTop: '100px' }}>
-            <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    );
+    // if (loading) return (
+    //     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', marginTop: '100px' }}>
+    //         <div className="spinner-border text-primary" role="status">
+    //             <span className="visually-hidden">Loading...</span>
+    //         </div>
+    //     </div>
+    // );
 
     return (
         <div className="product-specs-page pb-5" style={{ marginTop: '100px', backgroundColor: '#f8f9fa', minHeight: '80vh' }}>

@@ -263,7 +263,6 @@ const RegisterPage = () => {
                     </div>
                 </div>
             </div>
-            <ToastContainer />
         </div>
     );
 };
