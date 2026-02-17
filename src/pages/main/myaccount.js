@@ -781,7 +781,6 @@ const MyAccountPage = () => {
                         </div>
                     </div>
                 </div>
-                <ToastContainer />
 
             </div>
 

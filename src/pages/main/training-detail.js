@@ -5,7 +5,7 @@ import { Formik, Form, Field } from 'formik';
 
 import * as Yup from 'yup';
 import { useNavigate, useParams } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import apiProvider from "../../apiProvider/categoryApi";
 import addToCartApi from "../../apiProvider/addToCartApi";
 import loginApi from "../../apiProvider/api";
@@ -667,7 +667,7 @@ const TrainingDetailPage = () => {
                         Date - {courseDetails && courseDetails.courseDate && courseDetails.courseDate[0].date ? formatDate(courseDetails.courseDate[0].date) : formatDateC(courseDetails.createdAt)}
                       </span> */}
                           <span className="fs-6" >
-                           {translateSync("Date")} - <span style={{ color: "red" }}>TBA</span>
+                            {translateSync("Date")} - <span style={{ color: "red" }}>TBA</span>
                           </span>
                         </>
                       }

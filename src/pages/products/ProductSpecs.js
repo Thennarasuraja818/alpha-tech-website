@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { addToCart } from "../../redux/cartSlice";
+import { addToCart, setCartCount } from "../../redux/cartSlice";
 import productDetails from "../../data/productDetails.json";
 import subcategoryVariants from "../../data/subcategoryVariants.json";
 import { toast } from "react-toastify";
@@ -168,18 +168,27 @@ const ProductSpecs = () => {
 
         try {
             const result = await apiCart.addToCart(payload);
-            if (result && result.status && result.response) {
-                dispatch(addToCart({
-                    id: item.uniqueId,
-                    name: `${variantData?.name || 'Product'} - ${item.partNo}`,
-                    partNo: item.partNo,
-                    quantity: qty,
-                    // totalPrice: totalPrice,
-                    image: variantData?.image || "/img/product-seal-1.png"
-                }));
-                toast.success(`Added ${qty} x ${item.partNo} to cart!`, {
-                    style: { boxShadow: 'none', border: '1px solid #e2e8f0' }
-                });
+            if (result && result.status) {
+
+                console.log("Toast success triggered in ProductSpecs.js");
+                toast.success(`Added ${qty} x ${item.partNo} to cart!`);
+                // 2. Fetch Helper: Logic to get accurate count from server
+                const fetchUpdatedCount = async () => {
+                    let countResult;
+                    if (token && user._id) {
+                        countResult = await apiCart.getCartCount(user._id, { type: 'user', userType: 'user' });
+                    } else {
+                        countResult = await apiCart.getCartCount(guestId, { type: 'guest', userType: 'guest' });
+                    }
+
+                    if (countResult?.status && countResult?.response?.data) {
+                        dispatch(setCartCount(countResult.response.data.count || 0));
+                    }
+                };
+
+                await fetchUpdatedCount();
+
+
             } else {
                 toast.error(result?.response || 'Failed to add to cart');
             }
@@ -189,13 +198,13 @@ const ProductSpecs = () => {
         }
     };
 
-    if (loading) return (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', marginTop: '100px' }}>
-            <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    );
+    // if (loading) return (
+    //     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', marginTop: '100px' }}>
+    //         <div className="spinner-border text-primary" role="status">
+    //             <span className="visually-hidden">Loading...</span>
+    //         </div>
+    //     </div>
+    // );
 
     return (
         <div className="product-specs-page pb-5" style={{ marginTop: '100px', backgroundColor: '#f8f9fa', minHeight: '80vh' }}>

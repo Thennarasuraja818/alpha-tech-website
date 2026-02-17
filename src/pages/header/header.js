@@ -5,6 +5,7 @@ import { useTranslation } from "../../context/TranslationContext";
 import HomeApi from "../../apiProvider/homeApi";
 import { IMAGE_URL } from "../../network/apiClient";
 import { logout } from "../../redux/authSlice";
+import { setCartCount } from "../../redux/cartSlice";
 import apiCart from "../../apiProvider/addToCartApi";
 
 const Header = () => {
@@ -22,8 +23,8 @@ const Header = () => {
     const [categoryList, setCategoryList] = useState([]);
     const [subCategoryList, setSubCategoryList] = useState([]);
     const [showAccountMenu, setShowAccountMenu] = useState(false);
-    const [cartCount, setCartCount] = useState(0);
     const dispatch = useDispatch();
+    const cartCount = useSelector((state) => state.cart.totalQuantity);
 
     // Scroll listener
     useEffect(() => {
@@ -79,7 +80,7 @@ const Header = () => {
             }
 
             console.error("Cart Count API Response:", result?.response?.data);
-            setCartCount(result?.response?.data?.count || 0)
+            dispatch(setCartCount(result?.response?.data?.count || 0))
 
         } catch (error) {
             console.error("Error fetching cart details:", error);
