@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form, Field, useFormikContext } from 'formik';
 import * as Yup from 'yup';
 import { useSearchParams, useNavigate } from "react-router-dom";
 
@@ -16,6 +16,7 @@ import './myaccount.css';
 import apiProvider from "../../apiProvider/api";
 import apiCart from "../../apiProvider/addToCartApi";
 import { toast } from "react-toastify";
+import { setCartCount } from "../../redux/cartSlice";
 
 const radioStyles = `
   .payment-radio-native {
@@ -114,11 +115,24 @@ const addressSchema = Yup.object().shape({
     postalCode: Yup.string().required('Postal Code is required'),
 });
 
+const ScrollToError = () => {
+    const { errors, submitCount, isValidating } = useFormikContext();
+
+    useEffect(() => {
+        if (!isValidating && submitCount > 0 && Object.keys(errors).length > 0) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [submitCount, isValidating]);
+
+    return null;
+};
+
 const CheckoutPage = () => {
     const countryList = Country.getAllCountries();
     const navigate = useNavigate();
     const { translateSync, currentLanguage, setCurrentLanguage } = useTranslation();
     const user = useSelector((state) => state.auth.user);
+    const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
     const type = searchParams.get("type");
     console.error("type :", searchParams.get("type"))
@@ -286,6 +300,7 @@ const CheckoutPage = () => {
                 // Clear cart
                 setCartListDetails([]);
                 setTotalPrice(0);
+                dispatch(setCartCount(0));
 
                 // Redirect to success page or orders page
                 setTimeout(() => {
@@ -335,9 +350,8 @@ const CheckoutPage = () => {
                                 }}
                             >
                                 {({ errors, touched, values, setFieldValue, handleChange, handleBlur, isValid, dirty }) => (
-                                    <Form onSubmit={(e) => {
-                                        e.preventDefault();
-                                    }}>
+                                    <Form>
+                                        <ScrollToError />
                                         <div className="row g-4">
                                             {/* Left Side - Address (Wider) */}
                                             <div className="col-lg-7 col-xl-8">
@@ -658,15 +672,8 @@ const CheckoutPage = () => {
                                                         </div>
 
                                                         <button
-                                                            type="button"
+                                                            type="submit"
                                                             className="btn btn-danger w-100 mt-4 py-2"
-                                                            onClick={() => {
-                                                                if (transectionCurrecy?.currencyName !== "AED") {
-                                                                    if (isValid && dirty) {
-                                                                        formSubmit(values)
-                                                                    }
-                                                                }
-                                                            }}
                                                             style={{
                                                                 borderRadius: '8px',
                                                                 fontSize: '15px',

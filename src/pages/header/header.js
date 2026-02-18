@@ -44,7 +44,7 @@ const Header = () => {
         fetchCategories();
         fetchSubCategories();
         getCartCount();
-    }, []);
+    }, [isAuthenticated]);
 
     const fetchCategories = async () => {
         try {
@@ -261,6 +261,7 @@ const Header = () => {
                                         className="dropdown-item text-danger d-flex align-items-center gap-2"
                                         onClick={() => {
                                             dispatch(logout());
+                                            dispatch(setCartCount(0));
                                             localStorage.removeItem("userToken");
                                             localStorage.removeItem("user");
                                             navigate("/");
