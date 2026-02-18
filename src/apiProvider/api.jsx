@@ -237,6 +237,22 @@ class ApiProvider {
     }
   }
 
+
+  async getOrderCounts() {
+    try {
+      const response = await apiClient.get('order-counts');
+      console.error("response :", response);
+
+      if (response.status === 200 || response.status === 201) {
+        return { status: true, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
   async orderDetails(id) {
     try {
       const response = await apiClient.get(`orders/${id}`);
