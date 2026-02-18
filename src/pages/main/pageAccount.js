@@ -50,6 +50,7 @@ const PageAccount = () => {
     console.error("countries", countries)
     const [states, setStates] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [orderCounts, setOrderCounts] = useState({ totalCount: 0, activeCount: 0 });
 
 
 
@@ -57,6 +58,7 @@ const PageAccount = () => {
         window.scrollTo(0, 0);
         fetchAddresses()
         fetchOrders();
+        fetchOrderCounts();
     }, []);
 
     const handleLogout = () => {
@@ -201,6 +203,21 @@ const PageAccount = () => {
         }
     };
 
+    const fetchOrderCounts = async () => {
+        try {
+            const result = await apiProvider.getOrderCounts();
+            console.error("fetchOrderCounts result:", result);
+            if (result && result.status) {
+                setOrderCounts({
+                    totalCount: result.response?.data?.totalCount || 0,
+                    activeCount: result.response?.data?.activeCount || 0
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching order counts:", error);
+        }
+    };
+
     // Dashboard Content
     const renderDashboard = () => (
         <div className="dashboard-content">
@@ -237,9 +254,9 @@ const PageAccount = () => {
                         <div className="d-flex align-items-center justify-content-between">
                             <div>
                                 <h6 className="text-muted mb-2">Total Orders</h6>
-                                <h3 className="fw-bold mb-0">24</h3>
+                                <h3 className="fw-bold mb-0">{orderCounts.totalCount}</h3>
                                 <small className="text-success">
-                                    <i className="bi bi-arrow-up me-1"></i>+3 this month
+                                    <i className="bi bi-arrow-up me-1"></i>Last 30 days
                                 </small>
                             </div>
                             <div className="stat-icon bg-primary bg-opacity-10 p-3 rounded-circle">
@@ -253,7 +270,7 @@ const PageAccount = () => {
                         <div className="d-flex align-items-center justify-content-between">
                             <div>
                                 <h6 className="text-muted mb-2">Active Orders</h6>
-                                <h3 className="fw-bold mb-0">2</h3>
+                                <h3 className="fw-bold mb-0">{orderCounts.activeCount}</h3>
                                 <small className="text-warning">
                                     <i className="bi bi-clock me-1"></i>In progress
                                 </small>
@@ -482,7 +499,8 @@ const PageAccount = () => {
                             <input
                                 type="text"
                                 className="form-control"
-                                defaultValue="Thennarasu"
+                                value={user?.name}
+                                readOnly
                             />
                         </div>
                         <div className="col-md-6">
@@ -490,7 +508,8 @@ const PageAccount = () => {
                             <input
                                 type="text"
                                 className="form-control"
-                                defaultValue="Raja"
+                                value={user?.lastName || ""}
+                                readOnly
                             />
                         </div>
                     </div>
@@ -499,7 +518,8 @@ const PageAccount = () => {
                         <input
                             type="email"
                             className="form-control"
-                            defaultValue="thennarasu@example.com"
+                            value={user?.email}
+                            readOnly
                         />
                     </div>
                     <div className="mb-3">
@@ -507,7 +527,8 @@ const PageAccount = () => {
                         <input
                             type="tel"
                             className="form-control"
-                            defaultValue="+91 98765 43210"
+                            value={user?.phone}
+                            readOnly
                         />
                     </div>
 

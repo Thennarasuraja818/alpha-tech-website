@@ -81,11 +81,9 @@ class ApiProvider {
       const response = await apiClient.post("users/register", input);
       const message = response.data?.message ?? "Something went wrong";
       if (response.status == 200 || response.status == 201) {
-        toast(message)
         // notification.showAlertNotification(response.data.message, true);
         return { status: response.status, response: response };
       } else {
-        toast(message)
         // notification.showAlertNotification(message, false);/
         return {
           status: false,
@@ -229,6 +227,22 @@ class ApiProvider {
 
       if (response.status === 200 || response.status === 201) {
         return { status: response.status, response: response.data };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
+
+  async getOrderCounts() {
+    try {
+      const response = await apiClient.get('order-counts');
+      console.error("response :", response);
+
+      if (response.status === 200 || response.status === 201) {
+        return { status: true, response: response.data };
       } else {
         return null;
       }

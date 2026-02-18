@@ -56,12 +56,10 @@ const RegisterPage = () => {
             }
             const result = await apiProvider.register(input)
 
-            if (result && result.status === 200 && result.response) {
+            if (result.status && result.response) {
                 toast.success("Registration successful! Please login.");
-                toast.success("Login Successful!", { autoClose: 1500 });
+                // toast.success("Login Successful!", { autoClose: 1500 });
                 setTimeout(() => navigate("/login"), 1500);
-            } else {
-                toast.error("Registerd failed. Please try again.");
             }
 
             if (result?.response?.response?.data?.message) {
@@ -165,8 +163,9 @@ const RegisterPage = () => {
                                                         name="country"
                                                         onChange={handleChange}
                                                         onBlur={handleBlur}
+                                                        value={values.country}
                                                     >
-                                                        <option value="">Select Country *</option>
+                                                        <option value="">Select Country</option>
                                                         {countries.map((country) => (
                                                             <option key={country.isoCode} value={country.name}>
                                                                 {country.name}
@@ -183,6 +182,7 @@ const RegisterPage = () => {
                                                         name="preferredLanguage"
                                                         onChange={handleChange}
                                                         onBlur={handleBlur}
+                                                        value={values.preferredLanguage}
                                                     >
                                                         <option value="">Select Language *</option>
                                                         <option value="English">English</option>
