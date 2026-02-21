@@ -70,7 +70,6 @@ const buildVariantData = (product) => {
     const columns = [
         ...extraKeys.map((k) => ({ key: k, label: k.charAt(0).toUpperCase() + k.slice(1) })),
         { key: "sku", label: "SKU" },
-        // { key: "stock", label: "Stock" },
         { key: "price", label: "Price" },
     ];
 
@@ -235,7 +234,7 @@ const ProductSpecs = () => {
         // Calculate variant name (use last extra attribute value for generic variants)
         let name = item.partNo || item.sku || "item";
         if (productType === "variant") {
-            const attrKeys = variantCols.filter(c => !["price", "stock", "sku", "customermrp", "mrp"].includes(c.key));
+            const attrKeys = variantCols.filter(c => !["price", "stock", "sku", "customermrp", "mrp", "weight"].includes(c.key));
             if (attrKeys.length > 0) {
                 name = item[attrKeys[attrKeys.length - 1].key] || name;
             }
@@ -496,7 +495,7 @@ const ProductSpecs = () => {
                                                                 <td key={col.key}>
                                                                     {col.key === "customermrp" || col.key === "price" ? (
                                                                         <span className="fw-semibold" style={{ color: "var(--primary-color)" }}>
-                                                                            {item[col.key] ? `₹${item[col.key]}` : "—"}
+                                                                            {(item.customermrp || item.price) ? `₹${item.customermrp || item.price}` : "—"}
                                                                         </span>
                                                                     )
                                                                         //  : col.key === "stock" ? (
