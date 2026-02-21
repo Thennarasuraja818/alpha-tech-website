@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { removeFromCart, clearCart, updateQuantity } from "../../redux/cartSlice";
 import apiCart from "../../apiProvider/addToCartApi";
+import { IMAGE_URL } from "../../network/apiClient";
 
 const CartPage = () => {
     const dispatch = useDispatch();
@@ -121,7 +122,7 @@ const CartPage = () => {
                 result = await apiCart.getCart(guestId, { type: 'guest', userType: 'guest' });
             }
 
-            console.log("Cart API Response:", result?.response?.data);
+            console.error("Cart API Response:", result?.response?.data);
 
             // Handle the API response and map to cart items format
             // API returns an array, get the first cart object
@@ -146,7 +147,7 @@ const CartPage = () => {
                     mrpPrice: product.mrpPrice,
                     quantity: product.quantity,
                     image: product.productImage && product.productImage.length > 0
-                        ? (product.productImage[0].url || product.productImage[0])
+                        ? `${IMAGE_URL}${product.productImage[0].docPath}/${product.productImage[0].docName}`
                         : "/img/product-seal-1.png",
                     offerAmount: product.offerAmount || 0,
                     offerType: product.offerType || 'no',
