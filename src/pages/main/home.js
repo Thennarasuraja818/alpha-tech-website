@@ -244,11 +244,11 @@ const HomePage = () => {
             {/* 3. Alpha Group Divisions (Dark BG) */}
             <section className="py-5 division-section-bg">
                 <div className="container-fluid px-4" >
-                    <div className="text-center mb-5">
+                    <div className="text-center mb-4">
                         <h2 className="text-white">Key Products</h2>
                     </div>
 
-                    <div className="category-scroll-wrapper">
+                    <div className="d-flex justify-content-center">
                         <div className="category-scroll">
                             {categoryList.map((item) => (
                                 <div className="category-item" key={item._id}>
@@ -280,31 +280,7 @@ const HomePage = () => {
                     </div>
                 </div>
             </section>
-            {/* <section className="py-5 bg-white">
-                <div className="container" style={{ maxWidth: '1240px' }}>
-                    <div className="text-center mb-5" data-aos="fade-up">
-                        <h2>Our Product Categories</h2>
-                    </div>
-                    <div className="row g-4">
-                        {categoryData.map((cat, index) => (
-                            <div className="col-md-4" key={cat.id} data-aos="fade-up" data-aos-delay={index * 100}>
-                                <div className="category-card h-100" onClick={() => navigate('/products')}>
-                                    <div className="category-icon-wrapper">
-                                        <i className={`bi ${cat.icon}`}></i>
-                                    </div>
-                                    <div className="category-content">
-                                        <h4>{cat.title}</h4>
-                                        <p className="text-muted">{cat.description}</p>
-                                        <span className="text-primary fw-bold text-decoration-none" style={{ color: 'var(--accent-color)' }}>
-                                            Explore <i className="bi bi-arrow-right"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section> */}
+
             {/* 4. Why Choose Us */}
             <section className="py-5 bg-white">
                 <div className="container">
@@ -336,7 +312,7 @@ const HomePage = () => {
                     <div className="row g-3 justify-content-center">
                         {featuredProductData.slice(0, 6).map((prod, index) => (
                             <div className="col-lg-2 col-md-4 col-6" key={prod.id} data-aos="zoom-in" data-aos-delay={index * 100}>
-                                <div className="product-card h-100 bg-white border-0 shadow-sm text-center hover-lift overflow-hidden"
+                                <div className="product-card h-100 bg-white border-0 shadow-sm text-center hover-lift overflow-hidden rounded"
                                     onClick={() => navigate('/products')}
                                     style={{ cursor: 'pointer', transition: 'transform 0.3s ease' }}>
 
