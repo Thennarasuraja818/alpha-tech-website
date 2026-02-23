@@ -60,9 +60,9 @@ class homeApi {
         }
     }
 
-    async subCategoryList(input) {
+    async subCategoryList(params) {
         try {
-            const response = await apiClient.get('/subcategories')
+            const response = await apiClient.get('/subcategories', { params })
 
             if (response.status == 200 || response.status == 201) {
                 return {

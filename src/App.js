@@ -68,8 +68,8 @@ function App() {
         {/* Products */}
         <Route path="/products" element={<ProductsMain />} />
         {/* <Route path="/products/:subcategoryId" element={<ProductListing />} /> */}
-        <Route path="/products/:subCategoryId" element={<SubcategoryVariants />} />
-        <Route path="/products/:subCategoryId/:variantId" element={<ProductSpecs />} />
+        <Route path="/products/:categoryId" element={<SubcategoryVariants />} />
+        <Route path="/products/:categoryId/:subCategoryId" element={<ProductSpecs />} />
         <Route path="/cart" element={<CartPage />} />
 
         {/* New Pages */}

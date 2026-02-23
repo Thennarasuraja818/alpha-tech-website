@@ -21,8 +21,6 @@ const Header = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [categoryList, setCategoryList] = useState([]);
-    const [subCategoryList, setSubCategoryList] = useState([]);
-    const [showAccountMenu, setShowAccountMenu] = useState(false);
     const dispatch = useDispatch();
     const cartCount = useSelector((state) => state.cart.totalQuantity);
 
@@ -42,7 +40,6 @@ const Header = () => {
 
     useEffect(() => {
         fetchCategories();
-        fetchSubCategories();
         getCartCount();
     }, [isAuthenticated]);
 
@@ -87,24 +84,7 @@ const Header = () => {
         }
     };
 
-    const fetchSubCategories = async () => {
-        try {
-            const response = await HomeApi.subCategoryList()
-            if (response.status) {
-                const data = response.response;
-                console.log("response: ", data)
-                if (data?.data?.items && Array.isArray(data?.data?.items)) {
-                    setSubCategoryList(data?.data?.items);
-                } else {
-                    console.error("Subcategories API returned non-array:", data?.data?.items);
-                    setSubCategoryList([]);
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching subcategories:", error);
-            setSubCategoryList([]);
-        }
-    }
+
 
     const navbarClasses = `navbar navbar-expand-lg fixed-top industrial-navbar ${scrolled ? 'shadow-sm' : ''}`;
 
@@ -143,7 +123,7 @@ const Header = () => {
 
                         {/* Products Mega Menu */}
                         <li
-                            className="nav-item dropdown position-static"
+                            className="nav-item dropdown position-relative"
                             onMouseEnter={() => setShowMegaMenu(true)}
                             onMouseLeave={() => setShowMegaMenu(false)}
                         >
@@ -157,47 +137,50 @@ const Header = () => {
                                 {translateSync('Products')}
                             </a>
 
-                            {/* Desktop Mega Menu with Dynamic API Data */}
-                            <div className={`dropdown-menu mega-menu ${showMegaMenu ? 'show' : ''}`} style={{ left: '50%', transform: 'translateX(-50%)', width: '90%', padding: '20px' }}>
-                                <div className="row">
-                                    {categoryList.map((category) => {
-                                        // Filter subcategories for this category
-                                        const categorySubCategories = subCategoryList.filter(sub => {
-                                            // Check if sub.category array contains the current category
-                                            return sub.category && Array.isArray(sub.category) && sub.category.some(cat => cat._id === category._id);
-                                        });
-
-                                        // Only render if there are subcategories or if you want to show empty categories too
-                                        return (
-                                            <div className="col-md-4 mb-4" key={category._id}>
-                                                <h6 className="text-uppercase border-bottom pb-2 mb-3 fw-bold text-primary">
-                                                    {category.name}
-                                                </h6>
-                                                <ul className="list-unstyled">
-                                                    {categorySubCategories.length > 0 ? (
-                                                        categorySubCategories.map((sub) => (
-                                                            <li key={sub._id} className="mb-2">
-                                                                <Link
-                                                                    to={`/products/${sub._id}`}
-                                                                    state={{ subCategoryName: sub.name }}
-                                                                    className="text-decoration-none text-dark hover-primary"
-                                                                    onClick={closeMenus}
-                                                                    style={{ transition: 'color 0.2s' }}
-                                                                    onMouseOver={(e) => e.target.style.color = 'var(--primary-color)'}
-                                                                    onMouseOut={(e) => e.target.style.color = ''}
-                                                                >
-                                                                    {sub.name} {/* Assuming API returns subCategoryName */}
-                                                                </Link>
-                                                            </li>
-                                                        ))
-                                                    ) : (
-                                                        <li className="text-muted small">No subcategories available</li>
-                                                    )}
-                                                </ul>
-                                            </div>
-                                        );
-                                    })}
-                                    {categoryList.length === 0 && <p className="text-center text-muted">Loading categories...</p>}
+                            {/* Simple Column-wise Category Dropdown */}
+                            <div
+                                className={`dropdown-menu border-0 shadow-sm ${showMegaMenu ? 'show' : ''}`}
+                                style={{
+                                    left: '0',
+                                    width: '220px',
+                                    padding: '8px 0',
+                                    borderRadius: '8px',
+                                    marginTop: '0',
+                                    borderTop: '3px solid var(--primary-color) !important',
+                                    visibility: showMegaMenu ? 'visible' : 'hidden',
+                                    opacity: showMegaMenu ? 1 : 0,
+                                    transform: showMegaMenu ? 'translateY(0)' : 'translateY(10px)',
+                                    transition: 'all 0.3s ease',
+                                    display: 'block',
+                                    position: 'absolute',
+                                    top: '100%',
+                                    zIndex: 1000
+                                }}
+                            >
+                                <div className="d-flex flex-column">
+                                    {categoryList.map((category) => (
+                                        <NavLink
+                                            key={category._id}
+                                            to={`/products/${category._id}`}
+                                            className="dropdown-item py-2 px-3 d-flex align-items-center text-truncate"
+                                            onClick={() => closeMenus()}
+                                            style={{
+                                                fontSize: '0.9rem',
+                                                fontWeight: '500',
+                                                color: '#334155',
+                                                backgroundColor: 'transparent'
+                                            }}
+                                        >
+                                            <i className="bi bi-chevron-right me-2" style={{ fontSize: '10px', color: 'var(--primary-color)' }}></i>
+                                            {category.name}
+                                        </NavLink>
+                                    ))}
+                                    {categoryList.length === 0 && (
+                                        <div className="px-3 py-2 text-center text-muted small">
+                                            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            Loading...
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </li>
@@ -214,70 +197,72 @@ const Header = () => {
                         <li className="nav-item">
                             <NavLink className="nav-link" to="/contact">{translateSync('Contact Us')}</NavLink>
                         </li>
-                    </ul>
+                    </ul >
 
                     {/* 3. Right: Icons */}
-                    <div className="d-flex align-items-center gap-4">
+                    < div className="d-flex align-items-center gap-4" >
                         {/* Search Icon */}
-                        <div className="search-icon-wrapper" style={{ cursor: 'pointer' }} onClick={() => setShowSearch(!showSearch)}>
+                        < div className="search-icon-wrapper" style={{ cursor: 'pointer' }} onClick={() => setShowSearch(!showSearch)}>
                             <i className={`bi ${showSearch ? 'bi-x-lg' : 'bi-search'} fs-5`} style={{ color: 'var(--primary-color)' }}></i>
-                        </div>
+                        </div >
                         {/* Cart */}
-                        <div className="cart-wrapper position-relative" style={{ cursor: 'pointer' }} onClick={() => navigate('/cart')}>
+                        < div className="cart-wrapper position-relative" style={{ cursor: 'pointer' }} onClick={() => navigate('/cart')}>
                             <i className="bi bi-cart3 fs-4" style={{ color: 'var(--primary-color)' }}></i>
                             <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
                                 {cartCount}
                             </span>
-                        </div>
+                        </div >
 
                         {/* Login */}
-                        {isAuthenticated ? (
-                            // <NavLink className="btn btn-sm btn-industrial-outline text-dark border-dark" to="/pageaccount">{translateSync('Dashboard')}</NavLink>
-                            <div className="account-wrapper position-relative">
-                                <div className="d-flex align-items-center gap-2 account-trigger" style={{ cursor: "pointer" }}>
-                                    <i className="bi bi-person fs-4" style={{ color: "var(--primary-color)" }}></i>
-                                    <span className="fw-medium">Account</span>
+                        {
+                            isAuthenticated ? (
+                                // <NavLink className="btn btn-sm btn-industrial-outline text-dark border-dark" to="/pageaccount">{translateSync('Dashboard')}</NavLink>
+                                <div className="account-wrapper position-relative">
+                                    <div className="d-flex align-items-center gap-2 account-trigger" style={{ cursor: "pointer" }}>
+                                        <i className="bi bi-person fs-4" style={{ color: "var(--primary-color)" }}></i>
+                                        <span className="fw-medium">Account</span>
+                                    </div>
+
+                                    <div className="account-dropdown p-2">
+                                        <NavLink className="dropdown-item d-flex align-items-center gap-2"
+                                            to="/pageaccount">
+                                            <i className="bi bi-person"></i> My Account
+                                        </NavLink>
+
+                                        <NavLink className="dropdown-item d-flex align-items-center gap-2"
+                                            to="/order-tracking">
+                                            <i className="bi bi-truck"></i> Order Tracking
+                                        </NavLink>
+
+                                        <NavLink className="dropdown-item d-flex align-items-center gap-2"
+                                            to="/wishlist">
+                                            <i className="bi bi-heart"></i> My Wishlist
+                                        </NavLink>
+
+                                        <hr className="my-2" />
+
+                                        <button
+                                            className="dropdown-item text-danger d-flex align-items-center gap-2"
+                                            onClick={() => {
+                                                dispatch(logout());
+                                                dispatch(setCartCount(0));
+                                                localStorage.removeItem("userToken");
+                                                localStorage.removeItem("user");
+                                                navigate("/");
+                                            }}
+                                        >
+                                            <i className="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="account-dropdown p-2">
-                                    <NavLink className="dropdown-item d-flex align-items-center gap-2"
-                                        to="/pageaccount">
-                                        <i className="bi bi-person"></i> My Account
-                                    </NavLink>
-
-                                    <NavLink className="dropdown-item d-flex align-items-center gap-2"
-                                        to="/order-tracking">
-                                        <i className="bi bi-truck"></i> Order Tracking
-                                    </NavLink>
-
-                                    <NavLink className="dropdown-item d-flex align-items-center gap-2"
-                                        to="/wishlist">
-                                        <i className="bi bi-heart"></i> My Wishlist
-                                    </NavLink>
-
-                                    <hr className="my-2" />
-
-                                    <button
-                                        className="dropdown-item text-danger d-flex align-items-center gap-2"
-                                        onClick={() => {
-                                            dispatch(logout());
-                                            dispatch(setCartCount(0));
-                                            localStorage.removeItem("userToken");
-                                            localStorage.removeItem("user");
-                                            navigate("/");
-                                        }}
-                                    >
-                                        <i className="bi bi-box-arrow-right"></i> Logout
-                                    </button>
-                                </div>
-                            </div>
-
-                        ) : (
-                            <NavLink className="btn btn-sm btn-industrial-primarys" to="/login" style={{ padding: "5px 15px", backgroundColor: "var(--primary-color)", color: "white", border: "none" }}>{translateSync('Login')}</NavLink>
-                        )}
-                    </div>
-                </div>
-            </div>
+                            ) : (
+                                <NavLink className="btn btn-sm btn-industrial-primarys" to="/login" style={{ padding: "5px 15px", backgroundColor: "var(--primary-color)", color: "white", border: "none" }}>{translateSync('Login')}</NavLink>
+                            )
+                        }
+                    </div >
+                </div >
+            </div >
             <style>
                 {`
 .account-wrapper {
@@ -321,10 +306,73 @@ const Header = () => {
 .account-dropdown .dropdown-item i {
     font-size: 14px;
 }
+
+/* Category Mega Menu Styling */
+.mega-menu {
+    border-top: 4px solid var(--primary-color) !important;
+    animation: fadeInMenu 0.3s ease-in-out;
+}
+
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.category-card {
+    background-color: #ffffff;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.category-card:hover {
+    background-color: #ffffff;
+    border-color: rgba(30, 41, 59, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.category-card .category-icon-wrapper {
+    transition: all 0.3s ease;
+}
+
+.category-card:hover .category-icon-wrapper {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.category-card:hover .category-icon-wrapper i {
+    color: #ffffff !important;
+}
+
+.category-card .category-title {
+    transition: color 0.3s ease;
+}
+
+.category-card:hover .category-title {
+    color: var(--primary-color) !important;
+}
+
+.category-arrow {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    color: var(--primary-color) !important;
+}
+
+.category-card:hover .category-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
 `}
             </style>
 
-        </nav>
+        </nav >
     );
 }
 
