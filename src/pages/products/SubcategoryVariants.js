@@ -7,33 +7,57 @@ import HomeApi from '../../apiProvider/homeApi';
 import { IMAGE_URL } from '../../network/apiClient';
 
 const SubcategoryVariants = () => {
-    const { subCategoryId } = useParams();
+    const { categoryId } = useParams();
     const navigate = useNavigate();
     const { translateSync } = useTranslation();
-    const location = useLocation();
-    const { subCategoryName } = location.state || {};
-    const [childCategoryList, setChildCategoryList] = useState([]);
-    const [apiSubCategoryName, setApiSubCategoryName] = useState("");
+    const [subCategoryList, setSubCategoryList] = useState([]);
+    const [categoryName, setCategoryName] = useState("");
 
-    const getChildCategoryList = async () => {
+    // const getChildCategoryList = async () => {
+    //     try {
+    //         const response = await HomeApi.childCategoryList({ subCategoryId });
+    //         console.log("responce :", response);
+    //         if (response.status) {
+    //             setChildCategoryList(response.response.data);
+    //             if (response.response.subCategory) {
+    //                 setApiSubCategoryName(response.response.subCategory.name);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.log("error :", error);
+    //     }
+    // }
+
+    const fetchSubCategories = async () => {
         try {
-            const response = await HomeApi.childCategoryList({ subCategoryId });
-            console.log("responce :", response);
+            const params = {
+                category: categoryId,
+                limit: 100
+            }
+            const response = await HomeApi.subCategoryList(params)
             if (response.status) {
-                setChildCategoryList(response.response.data);
-                if (response.response.subCategory) {
-                    setApiSubCategoryName(response.response.subCategory.name);
+                const data = response.response;
+                if (data?.data?.items && Array.isArray(data?.data?.items)) {
+                    setSubCategoryList(data?.data?.items);
+                    if (data.data.items.length > 0 && data.data.items[0].category?.[0]?.name) {
+                        setCategoryName(data.data.items[0].category[0].name);
+                    }
+                } else {
+                    console.error("Subcategories API returned non-array:", data?.data?.items);
+                    setSubCategoryList([]);
                 }
             }
         } catch (error) {
-            console.log("error :", error);
+            console.error("Error fetching subcategories:", error);
+            setSubCategoryList([]);
         }
     }
 
     useEffect(() => {
-        getChildCategoryList();
+        // getChildCategoryList();
+        fetchSubCategories();
         window.scrollTo(0, 0);
-    }, [subCategoryId]);
+    }, [categoryId]);
     return (
         <div className="subcategory-variants-page" style={{ marginTop: '100px', minHeight: '60vh', paddingBottom: '50px' }}>
             <div className="container">
@@ -41,28 +65,28 @@ const SubcategoryVariants = () => {
                 {/* Header */}
                 <div className="text-center mb-5">
                     <h1 className="fw-bold text-primary display-5 mb-3">
-                        {subCategoryName || apiSubCategoryName || "Sub Category"}
+                        {categoryName || "Category"}
                     </h1>
                     <div style={{ height: '4px', width: '80px', backgroundColor: 'var(--accent-color)', margin: '0 auto', borderRadius: '2px' }}></div>
-                    <p className="lead mt-3">
-                        {translateSync('Select a specific type below for technical specifications.')}
+                    <p className="lead mt-3 text-secondary">
+                        {translateSync(`Explore our ${categoryName || 'industrial'} range and technical specifications.`)}
                     </p>
                 </div>
 
                 {/* Variants Grid */}
-                {childCategoryList && childCategoryList.length > 0 ? (
+                {subCategoryList && subCategoryList.length > 0 ? (
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4 justify-content-center">
-                        {childCategoryList.map((variant) => {
-                            const image = variant.images?.[0];
+                        {subCategoryList.map((sub) => {
+                            const image = sub.images?.[0];
                             const imageUrl = image
                                 ? `${IMAGE_URL}/${image.docPath}/${image.docName}`
                                 : '';
 
                             return (
-                                <div className="col" key={variant._id}>
+                                <div className="col" key={sub._id}>
                                     <div
                                         className="card h-100 shadow-sm hover-lift cursor-pointer"
-                                        onClick={() => navigate(`/products/${subCategoryId}/${variant._id}`)}
+                                        onClick={() => navigate(`/products/${categoryId}/${sub._id}`)}
                                         style={{ transition: 'all 0.3s ease', cursor: 'pointer', border: '2px solid var(--accent-color)' }}
                                     >
                                         <div className="card-body p-4 text-center d-flex flex-column align-items-center">
@@ -70,7 +94,7 @@ const SubcategoryVariants = () => {
                                             <div className="mb-4 d-flex align-items-center justify-content-center"
                                                 style={{ height: '120px', width: '100%' }}>
                                                 {imageUrl ? (
-                                                    <img src={imageUrl} alt={variant.name} style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
+                                                    <img src={imageUrl} alt={sub.name} style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
                                                 ) : (
                                                     <div className="rounded-circle d-flex align-items-center justify-content-center"
                                                         style={{ width: '80px', height: '80px', backgroundColor: '#e3f2fd', color: 'var(--primary-color)' }}>
@@ -79,9 +103,9 @@ const SubcategoryVariants = () => {
                                                 )}
                                             </div>
 
-                                            <h5 className="card-title fw-bold text-dark">{variant.name}</h5>
-                                            {variant.description && (
-                                                <p className="card-text text-muted small">{variant.description.substring(0, 60)}...</p>
+                                            <h5 className="card-title fw-bold text-dark">{sub.name}</h5>
+                                            {sub.description && (
+                                                <p className="card-text text-muted small">{sub.description.substring(0, 60)}...</p>
                                             )}
 
                                             <button className="btn btn-sm mt-auto rounded-pill px-4 view-specs-btn" style={{ fontWeight: '600' }}>
@@ -98,7 +122,7 @@ const SubcategoryVariants = () => {
                         <div className="alert alert-info">
                             {translateSync('No specific variants found for this category. View all products directly.')}
                         </div>
-                        <button onClick={() => navigate(`/products/${subCategoryId}/all`)} className="btn btn-primary">
+                        <button onClick={() => navigate(`/products/${categoryId}/all`)} className="btn btn-primary">
                             {translateSync('View All Products')}
                         </button>
                     </div>

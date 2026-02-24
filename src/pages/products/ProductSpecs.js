@@ -81,7 +81,7 @@ const buildVariantData = (product) => {
 
 
 const ProductSpecs = () => {
-    const { subCategoryId, variantId: childCategoryId } = useParams();
+    const { subCategoryId, categoryId } = useParams();
     const [loading, setLoading] = useState(true);
     const [specs, setSpecs] = useState([]);
     const [variantData, setVariantData] = useState(null); // Store full variant data
@@ -106,10 +106,11 @@ const ProductSpecs = () => {
         try {
             setLoading(true);
             const params = {
-                childCategoryId: childCategoryId,
+                categoryId: categoryId,
                 subCategoryId: subCategoryId
             }
             const response = await HomeApi.ProductList(params)
+            console.error("fetchProducts_response: ", response)
 
             if (response.status) {
                 const products = response.response?.data || [];
@@ -119,28 +120,6 @@ const ProductSpecs = () => {
                 if (products.length > 0) {
                     const hero = products[0];
                     setHeroProduct(hero);
-
-                    // Combine both standards
-                    // const standards = [
-                    //     ...(hero.as_568a_standard || []),
-                    //     ...(hero.jis_b_2401_standard || [])
-                    // ];
-
-                    // const formattedSpecs = standards.map((std, index) => ({
-                    //     uniqueId: `${std.sku}-${index}`,
-
-                    //     partNo: std.sizeCode,
-                    //     id: std.metric_id_mm,
-                    //     idTolerance: std.metric_id_tolerance_mm,
-                    //     cs: std.metric_cs_mm,
-                    //     csTolerance: std.metric_cs_tolerance_mm,
-                    //     sku: std.sku,
-
-                    //     price: Number(std.price || 0),
-                    //     stock: Number(std.stock || 0),
-                    // }));
-
-                    // setSpecs(formattedSpecs);
 
                     if (isOringProduct(hero)) {
                         setProductType("oring");
@@ -176,7 +155,7 @@ const ProductSpecs = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchProducts();
-    }, [subCategoryId, childCategoryId])
+    }, [subCategoryId, categoryId])
 
     const activeRows = productType === "oring" ? oringSpecs : variantRows;
 
